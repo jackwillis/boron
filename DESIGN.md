@@ -106,8 +106,14 @@ concise diagnostic, and exits with status 1. Invalid CLI usage returns 2. Runtim
 backtrace lines are generated Ruby positions; source maps are not implemented.
 Boron binding errors include the original identifier location.
 
-Explicit keyword/splat syntax, try/throw forms, classes, and a block surface macro
-are future work. Hashes are not automatically converted to keyword arguments.
+A method send with a final `& expression` lowers through typed IR into
+Runtime.send_with_block, with preceding expressions as positional arguments.
+It does not depend on a shadowable Boron builtin. Ruby's normal block conversion
+applies, including nil and to_proc; ordinary sends retain Proc argument behavior.
+Use one call-site block marker rather than adding send& and .method& alternatives.
+The existing send-with-block primitive supports dynamic method names.
+
+Explicit keyword/splat syntax, try/throw forms, and class syntax are future work. Hashes are not automatically converted to keyword arguments.
 
 ## Dependency research
 

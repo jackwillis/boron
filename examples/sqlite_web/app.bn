@@ -13,7 +13,7 @@
 
 (def connection (.connection ActiveRecord::Base))
 (unless (.table_exists? connection "users")
-  (send-with-block connection :create_table ["users"]
+  (.create_table connection "users" &
     (fn [table] (.string table "name")))
   (.create! BoronDemo::User {:name "Ada"})
   (.create! BoronDemo::User {:name "Grace"}))
@@ -25,10 +25,10 @@
 (defn json-response [value]
   [200 {"content-type" "application/json"} [(.generate JSON value)]])
 
-(send-with-block BoronDemo::App :get ["/health"]
+(.get BoronDemo::App "/health" &
   (fn [] (json-response {"status" "ok" "users" (.count BoronDemo::User)})))
 
-(send-with-block BoronDemo::App :get ["/users"]
+(.get BoronDemo::App "/users" &
   (fn []
     (json-response
       (map (fn [user] {"id" (.id user) "name" (.name user)})

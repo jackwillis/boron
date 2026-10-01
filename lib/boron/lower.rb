@@ -76,6 +76,22 @@ module Boron
         if name&.start_with?(".")
           error("method send requires a receiver", form) if args.empty?
           method = name.delete_prefix(".")
+          markers = args.each_index.select { |index| SyntaxData.name(args[index]) == "&" }
+          unless markers.empty?
+            if markers.length != 1 || markers.first != args.length - 2 || markers.first.zero?
+              error("& must follow the receiver and positional arguments, with exactly one final block expression", form)
+            end
+            args = args.each_with_index.filter_map { |argument, index| argument unless index == markers.first }
+          end
+          if !markers.empty?
+            error("empty method name", head) if method.empty?
+            error("block send requires a receiver and final block argument", form) if args.length < 2
+            receiver, *arguments = args
+            block = arguments.pop
+            return call(IR::Local.new("::Boron::Runtime"), :send_with_block,
+              lower(receiver, environment), literal(method.to_sym),
+              IR::ArrayLiteral.new(arguments.map { |argument| lower(argument, environment) }), lower(block, environment))
+          end
           error("empty method name", head) if method.empty?
           call(lower(args[0], environment), :public_send, literal(method.to_sym), *args.drop(1).map { |arg| lower(arg, environment) })
         else

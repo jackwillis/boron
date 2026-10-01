@@ -73,13 +73,17 @@ module Boron
       env.define("apply", ->(function, values) { function.call(*values.to_a) })
       env.define("gensym", ->(prefix = "g") { gensym(prefix) })
       env.define("send", ->(receiver, method, *args) { receiver.public_send(method, *args) })
-      env.define("send-with-block", ->(receiver, method, args, block) { receiver.public_send(method, *args, &block) })
+      env.define("send-with-block", ->(receiver, method, args, block) { send_with_block(receiver, method, args, block) })
       env
     end
 
     def gensym(prefix)
       @gensym_counter = (@gensym_counter || 0) + 1
       Form::GeneratedIdentifier.new("#{prefix}__#{@gensym_counter}")
+    end
+
+    def send_with_block(receiver, method, arguments, block)
+      receiver.public_send(method, *arguments, &block)
     end
 
     def splice(value)

@@ -40,8 +40,9 @@ process. The core lint/test commands remain the ones in the repository README.
 ## Why no new class or route syntax?
 
 `Class.new(ActiveRecord::Base)` constructs a real model class. `const_set` names
-it before ActiveRecord needs its model identity. `send-with-block` registers real
-Sinatra routes and passes the schema callback to ActiveRecord. Route callbacks
+it before ActiveRecord needs its model identity. `.get` registers real Sinatra
+routes and `.create_table` passes the schema callback to ActiveRecord, using an
+explicit `&` before the final block expression. Route callbacks
 return `[status, headers, [body]]`, as supported by Sinatra/Rack. JSON generation
 and queries are the real Ruby gems, not Boron implementations.
 

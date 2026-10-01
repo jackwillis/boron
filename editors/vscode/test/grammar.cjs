@@ -64,6 +64,9 @@ async function main() {
   has('Sinatra::Base', 'Sinatra::Base', 'support.class.boron');
   has('(.[] xs 0)', '.[]', 'entity.name.function.member.boron');
   has('(.[]= xs 0 1)', '.[]=', 'entity.name.function.member.boron');
+  has('(.get App "/" & (fn [] "hello"))', '&', 'keyword.operator.rest.boron');
+  has('(defmacro twice [x] `(+ ~x ~x))', 'defmacro', 'keyword.control.boron');
+  has('(when true 1)', 'when', 'keyword.control.boron');
   lacks('(.[] xs 0)', '[', 'punctuation.section.brackets.begin.boron');
   has('(fn [x & xs] xs)', '&', 'keyword.operator.rest.boron');
   has('(puts "hello") ; comment (fake)', '; comment', 'comment.line.semicolon.boron');

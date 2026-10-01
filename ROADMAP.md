@@ -12,7 +12,7 @@ in small, test-driven slices. Future syntax examples are not implemented promise
 | P1 | Lexical language | Definitions, sequential let, functions, calls, conditionals, closures, recursion | Complete |
 | P2 | Initial Ruby interop | Explicit sends, constants, require, real JSON library | Complete for this slice |
 | P3 | Macros | Quote, quasiquote, expansion, defmacro, macroexpand, gensym | Complete for this slice |
-| P4 | Ruby blocks | Explicit block passing with Enumerable and File.open | Primitive complete; surface syntax deferred |
+| P4 | Ruby blocks | Explicit block passing with Enumerable and File.open | Explicit call-site & marker complete |
 | P5 | Classes | Real Class values, methods, state; macro sugar follows primitives | Planned |
 | P6–P7 | Usability and ecosystem | REPL, core macros/sequence helpers, real gem examples | Sequence helpers and gem example complete; REPL deferred |
 | P8+ | Further abstractions/tooling | Protocols, editor tooling; optional backend experiments | Deferred |
@@ -65,7 +65,8 @@ Acceptance criteria:
 - Core special-form names are reserved against macro redefinition; revisit other
   binding shadowing only with an explicit policy.
 - Design keyword/splat arguments; do not automatically reinterpret every Hash.
-- Choose block syntax over the working `send-with-block` primitive.
+- Block sends use `(.method receiver args... & block)`; more DSL sugar can
+  build on the existing primitive.
 - Define exception forms over Ruby's exception machinery.
 - Plan source maps for generated Ruby backtraces.
 - Design class/method primitives only after macros are established.

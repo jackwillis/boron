@@ -102,7 +102,7 @@ Arrays, Hashes, and Sets. Ruby exceptions propagate through the Ruby API.
 Strings support `\n`, `\r`, `\t`, `\"`, and `\\`; they do not interpolate Ruby
 or Boron expressions. Functions return their last expression. False and nil are
 falsey; everything else is truthy. A Proc argument remains an argument unless
-passed through `send-with-block`.
+passed through `send-with-block` or marked with `&` in a method send.
 
 Quotation, quasiquotation, defmacro, macroexpand, gensym, and the core macros
 `defn`, `when`, and `unless` are implemented. Class syntax, keyword/splat

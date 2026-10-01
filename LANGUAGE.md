@@ -241,7 +241,20 @@ Proc. It invokes the Ruby method with that Proc in its block position. In contra
 `(.map xs f)` passes `f` as a positional argument; it does not invent a block.
 
 This primitive also works with File.open and its host-managed resource cleanup.
-A friendlier block syntax can later be a macro over this operation.
+Method sends accept `&` before one final block expression. Preceding arguments
+are passed normally. This is compiler syntax, not a macro:
+
+```clojure
+(.map [1 2] & (fn [x] (* x 2)))
+(.get BoronDemo::App "/health" & (fn [] "hello"))
+```
+
+The marker follows the receiver and any positional arguments. Ruby handles
+block conversion: a Proc or an object with `to_proc` becomes a block, and nil
+means no block. Receiver, positional arguments, and block expression evaluate
+once in that order. Without `&`, Proc arguments stay positional arguments.
+`send-with-block` remains useful for dynamically chosen method names. There is
+no `send&` alias or special `.method&` suffix.
 
 ## The small builtin library
 
