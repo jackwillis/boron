@@ -49,6 +49,20 @@ class SqliteWebTest < Minitest::Test
     assert_equal 3, BoronDemo::User.count
   end
 
+  def test_individual_user_route_uses_request_context_and_returns_json_404
+    user = BoronDemo::User.order(:id).first
+    response = @request.get("/users/#{user.id}", "HTTP_HOST" => "localhost")
+    assert_equal 200, response.status
+    assert_equal({"id" => user.id, "name" => "Ada"}, JSON.parse(response.body))
+    missing = @request.get("/users/99999", "HTTP_HOST" => "localhost")
+    assert_equal 404, missing.status
+    assert_match(/application\/json/, missing["content-type"])
+    assert_equal({"error" => "user not found"}, JSON.parse(missing.body))
+    invalid = @request.get("/users/not-a-number", "HTTP_HOST" => "localhost")
+    assert_equal 404, invalid.status
+    assert_equal 2, BoronDemo::User.count
+  end
+
   def test_compiled_app_runs_in_a_fresh_ruby_process
     source = File.join(__dir__, "app.bn")
     compiled = File.join(@directory, "app.rb")

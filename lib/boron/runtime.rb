@@ -76,6 +76,7 @@ module Boron
       env.define("gensym", ->(prefix = "g") { gensym(prefix) })
       env.define("send", ->(receiver, method, *args) { receiver.public_send(method, *args) })
       env.define("send-with-block", ->(receiver, method, args, block) { send_with_block(receiver, method, args, block) })
+      env.define("with-self", ->(function) { with_self(function) })
       env
     end
 
@@ -86,6 +87,11 @@ module Boron
 
     def send_with_block(receiver, method, arguments, block)
       receiver.public_send(method, *arguments, &block)
+    end
+
+    def with_self(function)
+      raise TypeError, "with-self requires a callable" unless function.respond_to?(:call)
+      proc { |*arguments| function.call(self, *arguments) }
     end
 
     def constant_name(form)

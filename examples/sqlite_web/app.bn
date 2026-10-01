@@ -22,8 +22,9 @@
 (.set BoronDemo::App :bind "127.0.0.1")
 (.set BoronDemo::App :port 4567)
 
-(defn json-response [value]
-  [200 {"content-type" "application/json"} [(.generate JSON value)]])
+(defn json-response [value & statuses]
+  [(if (= (count statuses) 0) 200 (first statuses))
+   {"content-type" "application/json"} [(.generate JSON value)]])
 
 (.get BoronDemo::App "/health" &
   (fn [] (json-response {"status" "ok" "users" (.count BoronDemo::User)})))
@@ -33,6 +34,18 @@
     (json-response
       (map (fn [user] {"id" (.id user) "name" (.name user)})
         (.order BoronDemo::User :id)))))
+
+; Sinatra binds Ruby self to the request instance. Supply it explicitly to fn.
+(def user-id-pattern (.new Regexp "\\A[1-9][0-9]*\\z"))
+(.get BoronDemo::App "/users/:id" &
+  (with-self
+    (fn [self & captures]
+      (let [id (get (.params self) "id")
+            user (if (.match? user-id-pattern id)
+                   (.find_by BoronDemo::User {:id id}) nil)]
+        (if user
+          (json-response {"id" (.id user) "name" (.name user)})
+          (json-response {"error" "user not found"} 404))))))
 
 ; Loading creates the app; only the explicit --serve argument starts a server.
 (when (= ARGV ["--serve"])
