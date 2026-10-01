@@ -1,17 +1,39 @@
 # Boron
 
+[![Tests](https://github.com/jackwillis/boron/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/jackwillis/boron/actions/workflows/ci-cd.yml)
+
 Boron is a Lisp hosted on Ruby. Ruby provides runtime values and libraries;
 Boron provides S-expressions, lexical functions, and compile-time macros.
 
 This is an experimental bootstrap compiler written in Ruby. It reads Boron forms,
 lowers them to a small Ruby IR, emits Ruby source, and executes through Ruby.
 
-## Try it
+```clojure
+(require "json")
+
+(def greet
+  (fn [name] (.generate JSON {:message name :active true})))
+
+(puts (greet "Hello from Boron!"))
+; {"message":"Hello from Boron!","active":true}
+```
+
+Boron collections are Ruby collections, and `.method` calls Ruby methods directly.
+The goal is Lisp syntax and macros with access to existing Ruby libraries. This is
+an early language implementation; see [Language core](#language-core) for what
+works today and [ROADMAP.md](ROADMAP.md) for what comes next.
+
+## Quick start
 
 Use Ruby 3.2 or newer (currently verified on Ruby 4.0.7). No external runtime gems
 are required for Boron itself. Required host libraries still need to be installed.
 
+Clone the repository and run an example directly; Bundler is only needed for
+development or examples with extra dependencies.
+
 ```sh
+git clone https://github.com/jackwillis/boron.git
+cd boron
 ./bin/boron run examples/hello.bn
 ./bin/boron run examples/make_adder.bn
 ./bin/boron run examples/json.bn
@@ -19,6 +41,8 @@ are required for Boron itself. Required host libraries still need to be installe
 ./bin/boron run examples/user_report.bn -- examples/users.json
 ./bin/boron compile --emit-ruby examples/make_adder.bn
 ```
+
+The hello example prints `Hello from Boron!` and `7`.
 
 `run` executes the program; use `puts` or `print` for output. `compile` writes Ruby
 to stdout without executing the program. Emitted Ruby requires Boron's runtime:
@@ -31,39 +55,16 @@ ruby -Ilib /tmp/make_adder.rb
 Pass program arguments after `--`; the program sees only those arguments in
 `ARGV`. Compiled Ruby receives normal Ruby command-line arguments.
 
-The user report reads a JSON array of records, selects records with `active: true`,
-and prints total/active counts, active names, and counts by role. Optional `name`
-and `role` fields must be strings or null; missing values use `unnamed` and
-`unknown`. Use `--help` as a program argument for usage. All processing code is
-written in Boron, using Ruby's actual JSON and File APIs.
+## Examples
 
-## Build a gem
-
-```sh
-gem build boron.gemspec
-gem install --local boron-0.1.0.gem
-boron run examples/make_adder.bn
-```
-
-The gem packages the runtime, `bin/boron`, examples, and language documentation.
-Its version is defined in `lib/boron/version.rb`. Development tools and editor
-files are not included, and the gem has no external runtime dependencies.
-License and homepage metadata are still undecided.
-
-## CI and CD
-
-The GitHub Actions workflow in `.github/workflows/ci-cd.yml` runs on pushes,
-pull requests, and manual dispatch. CI installs development/test dependencies,
-runs StandardRB, then runs Minitest on Ruby 3.3, 3.4, and 4.0. Once the entire
-matrix succeeds, CD builds the gem on Ruby 4.0 with `gem build`.
-There is no artifact upload or publishing step; the build remains on the runner.
-
-Workflow setup follows the current [GitHub Actions syntax reference](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
-and [ruby/setup-ruby guidance](https://github.com/ruby/setup-ruby).
-The matrix covers [currently maintained Ruby branches](https://www.ruby-lang.org/en/downloads/branches/),
-including [Debian 13's packaged Ruby 3.3](https://packages.debian.org/trixie/ruby).
-It tests the Ruby versions on Ubuntu runners, not Debian's packages themselves.
-Debian 12's Ruby 3.1 is below Boron's Ruby 3.2 minimum.
+| Example | What it demonstrates |
+| --- | --- |
+| [hello.bn](examples/hello.bn) | Output and arithmetic |
+| [make_adder.bn](examples/make_adder.bn) | Functions and lexical closures |
+| [json.bn](examples/json.bn) | Ruby's JSON library |
+| [blocks.bn](examples/blocks.bn) | Passing blocks to Ruby methods |
+| [user_report.bn](examples/user_report.bn) | Filtering and grouping JSON records; pass `examples/users.json` after `--` |
+| [SQLite web app](examples/sqlite_web/README.md) | ActiveRecord, SQLite, and Sinatra, with a separate gem bundle |
 
 ## Language core
 
@@ -111,6 +112,16 @@ declarations are implemented. Class bodies/methods, keyword/splat arguments,
 destructuring, and a REPL remain future work. Runtime backtraces
 currently refer to generated Ruby lines; source map work remains ahead.
 
+## Documentation
+
+- [LANGUAGE.md](LANGUAGE.md): implemented syntax and semantics.
+- [DESIGN.md](DESIGN.md): current implementation decisions.
+- [ROADMAP.md](ROADMAP.md): milestones, limitations, and planned work.
+- [SPEC.md](SPEC.md): original proposal, including aspirational syntax that is not implemented.
+- [TESTING.md](TESTING.md): test audit, optional integration checks, and coverage limits.
+- [DIAGNOSTICS.md](DIAGNOSTICS.md): diagnostic design and acceptance criteria.
+- [VS Code support](editors/vscode/README.md): local extension loading and tokenizer tests.
+
 ## Development
 
 ```sh
@@ -148,10 +159,27 @@ available through `Compiler#lower`. Sessions retain their own environments acros
 evaluations; independent sessions have separate Boron globals. Host Ruby libraries
 and their global state are shared normally.
 
-See [the informal language spec](LANGUAGE.md), [the original proposal](SPEC.md), [current decisions](DESIGN.md), and
-[the milestone backlog](ROADMAP.md). The proposal includes tentative syntax and
-aspirational examples; it is not a statement of implemented features.
+## Build a gem
 
-An optional database-backed web example is in
-[examples/sqlite_web](examples/sqlite_web/README.md), with its own gem bundle.
-See [DIAGNOSTICS.md](DIAGNOSTICS.md) for the proposed next error-system slice.
+```sh
+gem build boron.gemspec
+gem install --local boron-0.1.0.gem
+boron run examples/make_adder.bn
+```
+
+The gem packages the runtime, `bin/boron`, examples, and language documentation.
+Its version is defined in `lib/boron/version.rb`. Development tools and editor
+files are not included, and the gem has no external runtime dependencies.
+A project license has not yet been selected.
+
+## Continuous integration
+
+The [GitHub Actions workflow](https://github.com/jackwillis/boron/actions/workflows/ci-cd.yml)
+runs StandardRB followed by Minitest on Ruby 3.3, 3.4, and 4.0 for pushes,
+pull requests, and manual runs. After all three pass, it builds the gem on Ruby
+4.0. The badge above reports the overall workflow status on `main`, including
+lint, tests, and the gem build. Optional web integration and editor tokenizer
+tests have separate local instructions in [TESTING.md](TESTING.md).
+
+The workflow checks that the gem builds; it does not upload artifacts or publish
+releases. To try Boron today, use the checkout or build the gem locally.

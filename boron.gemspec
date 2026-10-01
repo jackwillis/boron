@@ -7,6 +7,8 @@ Gem::Specification.new do |spec|
   spec.email = ["jack@attac.us"]
   spec.summary = "A Lisp hosted on Ruby"
   spec.description = "An experimental Lisp compiler with lexical functions, Ruby interop, and inspectable generated Ruby."
+  spec.homepage = "https://github.com/jackwillis/boron"
+  spec.metadata["source_code_uri"] = spec.homepage
   spec.required_ruby_version = ">= 3.2"
 
   spec.files = Dir.chdir(__dir__) do
@@ -16,5 +18,5 @@ Gem::Specification.new do |spec|
   spec.executables = ["boron"]
   spec.require_paths = ["lib"]
 
-  # License and homepage metadata await project decisions.
+  # License metadata awaits a project decision.
 end
