@@ -51,8 +51,21 @@ Duplicate keys follow Ruby Hash behavior. Sets evaluate all elements, then remov
 duplicates using Ruby Set behavior.
 
 Collections are mutable. A vector literal is an actual Ruby Array, not a
-persistent data structure disguised as one. Strings are also mutable, and
-literal evaluation creates fresh strings and collections.
+persistent data structure disguised as one. Collection expressions allocate fresh
+containers. String literals are frozen Ruby Strings, including literals inside
+collections, quote/quasiquote, functions, and REPL submissions. Mutation of a
+literal raises Ruby FrozenError. Use an explicit mutable copy when needed:
+
+```clojure
+(def name "Ada")
+(def buffer (.dup name))
+(.concat buffer "!") ; "Ada!"
+```
+
+String.new and Ruby library results retain their own mutability. Boron does not
+freeze all String objects or deeply freeze collection contents. Explicit .dup
+creates a fresh mutable copy on each evaluation. Frozen literal identity/reuse
+is Ruby's behavior, not a promised Boron identity API. There is no per-file toggle.
 
 Numbers currently use decimal syntax. A fractional part needs digits on both
 sides of the decimal point. Non-finite float literals are rejected. Ruby handles

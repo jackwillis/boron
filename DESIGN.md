@@ -18,7 +18,8 @@ objects. Each contains a datum and `SourceSpan`. Structural datums are
 Collections contain child syntax objects. Other datums use Ruby literal values.
 
 Identifiers are distinct from Ruby Symbols. Syntax and structural data are
-immutable; runtime collections and emitted strings are mutable Ruby values.
+immutable; runtime collections are mutable Ruby values. Emitted string literals
+are frozen, while other host strings retain their own mutability.
 
 Spans carry filename, zero-based character offsets, and one-based line/column
 positions. Ends are exclusive. LF advances the line; CRLF works as whitespace
@@ -91,8 +92,13 @@ lowering should follow measurements and semantic tests, not precede them.
 execute through Ruby eval with a session environment. RubyVM is used only by a
 test to verify syntax; the compiler itself does not require CRuby-specific APIs.
 
-Strings are copied when emitted, so evaluating a literal again yields a fresh,
-mutable String. Collection expressions also allocate fresh host collections.
+The compiler emits frozen_string_literal: true and string literals without an
+automatic .dup. This applies equally to metadata, runtime literals, and quotation.
+Mutable strings remain available through explicit .dup, String.new, and host APIs.
+No separate static/mutable string IR nodes are needed under this policy. The emitter
+renders literal String conditions as true (Strings are always truthy) to avoid
+Ruby's literal-in-condition warning; both branches are still lowered and validated.
+Collection expressions allocate fresh host containers without deep freezing.
 Evaluation order follows Ruby's receiver/argument and array/hash element order.
 
 ## Ruby blocks and exceptions

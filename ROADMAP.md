@@ -80,6 +80,7 @@ direct YARV, and optimization remain outside the bootstrap scope.
 - Explicit with-self bridge, Ruby method installation through define_method, and
   Sinatra `/users/:id` backed by ActiveRecord with JSON 404 behavior.
 - Failure-space audit and independent code review; see TESTING.md.
+- Frozen string literals with explicit mutable copies; host String mutability preserved.
 
 ## Next bounded work
 

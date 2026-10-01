@@ -17,6 +17,7 @@ language slices, including diagnostics and interactive execution, not a claim th
 | REPL executes incomplete input, loses session state, or exits after a recoverable error | repl_test: multiline forms/strings, persistent macros, reader/runtime recovery, EOF, actual piped CLI, tty prompts, interrupt reset, cyclic values | Covered for minimal stream REPL; no transactional rollback claimed |
 | A callback receives stale/wrong self or loses captures/arity | instance_context_test: instance_exec, define_method, strict arity, lexical capture, reused callback instances, emitted Ruby | Covered for positional instance-context bridge |
 | ID coercion returns an unintended user or emitted route differs | sqlite_web/app_test: existing/missing/non-numeric/numeric-prefix IDs, JSON 404, compiled individual route | Covered for read-only user lookup |
+| Frozen-string policy leaks or explicit buffers alias | string_literals_test: literal/quoted/container freezing, mutation error, fresh explicit dup, host results, emitted code, warning-free conditions, REPL recovery | Covered; Ruby owns literal identity/reuse |
 | Editor misrepresents implemented syntax or misses a nested example | grammar.cjs: actual TextMate engine, declarations/macros, contextual ampersand scopes, definition names, all examples including sqlite_web/app.bn | Added focused scope cases and nested example traversal |
 
 The independent subagent code review found the ampersand-binding defect and no
@@ -57,7 +58,7 @@ framework, coverage package, or runtime dependency was needed for this audit.
 
 ## Latest validation
 
-October 1, 2026 on Ruby 4.0.7: StandardRB passes, 101 core tests / 656 assertions
+October 1, 2026 on Ruby 4.0.7: StandardRB passes, 107 core tests / 692 assertions
 pass (including other-session working test additions), and 4 optional web tests /
 22 assertions pass. The 41 editor scope assertions
 and extension checks pass. Gem build succeeds; the built gem was installed into

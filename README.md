@@ -106,6 +106,10 @@ falsey; everything else is truthy. A Proc argument remains an argument unless
 passed through `send-with-block` or marked with `&` in a method send.
 In ordinary calls, `&` can name a user-defined callable; it has no builtin binding.
 
+String literals are frozen, including quoted literals. Use `(.dup "Ada")` for a
+fresh mutable copy. Collections remain mutable; strings produced by Ruby libraries
+keep their own mutability. Mutating a frozen literal raises Ruby FrozenError.
+
 Quotation, quasiquotation, defmacro, macroexpand, gensym, and the core macros
 `defn`, `when`, and `unless` are implemented. Named `defclass` and `defmodule`
 declarations are implemented. The multiline REPL and first structured diagnostic

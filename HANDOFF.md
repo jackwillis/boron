@@ -82,7 +82,8 @@ If uses Ruby truth (only false/nil falsey) and evaluates one branch. Do is a seq
 Operators are ordinary callable bindings, including +, *, -, /, %, and comparisons.
 They can be shadowed; integer division is Ruby division. RubyIR models literal/local,
 assignment/call, array/hash, sequence/conditional, and lambda nodes. Emitter-generated
-local names avoid user-name injection. Literal strings allocate fresh mutable copies.
+local names avoid user-name injection. Literal strings are frozen; explicit .dup
+allocates fresh mutable copies. Host-created strings keep their own mutability.
 Arrays/Hashes/Sets are actual Ruby collections. Input evaluation order follows Ruby.
 
 Unbound uppercase paths resolve exact Ruby constants from Object, with explicit
@@ -239,9 +240,21 @@ new dependency resolver, mandatory development gems, or unrequested scaffolding.
 
 ## Final validation snapshot
 
-101 core tests / 656 assertions, 4 optional web tests / 22 assertions, and 41
+107 core tests / 692 assertions, 4 optional web tests / 22 assertions, and 41
 TextMate scope assertions plus extension checks passed on Ruby 4.0.7. StandardRB
 passed. Gem build and temporary-directory local installation succeeded; the
 installed REPL executed `(defn square [x] (* x x))` and `(square 9)` returned 81.
 No gem was uploaded and no server was left running. Documentation changes and
 future-tooling notes do not imply additional implemented commands.
+
+## String-literal policy revision
+
+The user reconsidered mutable literals and explicitly approved frozen literals
+with mutable String objects still available. Commit 7dfca4a removes the emitter's
+automatic .dup, retains the frozen-string directive, and tests literals/quotation,
+explicit copies, host String results, compiled programs, metadata, and REPL errors.
+String-literal conditions emit true to avoid Ruby parser warnings while preserving
+truth semantics. Runtime .dup remains explicit; no unary-plus shortcut, per-file
+switch, deep collection freeze, or extra string IR node was introduced. This
+supersedes the earlier fresh-mutable-literal contract. Other-session collection
+freshness tests now request an explicit copy when they mutate a string.
