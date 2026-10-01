@@ -48,6 +48,11 @@ async function main() {
   }
 
   has('(def square (fn [x] (* x x)))', 'def', 'keyword.control.boron');
+  has('(defn square [x] (* x x))', 'square', 'variable.other.definition.boron');
+  has('(defmacro twice [x] `(+ ~x ~x))', 'twice', 'variable.other.definition.boron');
+  has('(& left right)', '&', 'entity.name.function.boron');
+  lacks('(& left right)', '&', 'keyword.operator.boron');
+  has('(list? value)', 'list?', 'support.function.boron');
   has('(def square 1)', 'square', 'variable.other.definition.boron');
   has('(let [if 1] if)', 'if', 'variable.other.boron');
   has('(definitely 1)', 'definitely', 'entity.name.function.boron');
@@ -64,13 +69,13 @@ async function main() {
   has('Sinatra::Base', 'Sinatra::Base', 'support.class.boron');
   has('(.[] xs 0)', '.[]', 'entity.name.function.member.boron');
   has('(.[]= xs 0 1)', '.[]=', 'entity.name.function.member.boron');
-  has('(.get App "/" & (fn [] "hello"))', '&', 'keyword.operator.rest.boron');
+  has('(.get App "/" & (fn [] "hello"))', '&', 'keyword.operator.boron');
   has('(defmacro twice [x] `(+ ~x ~x))', 'defmacro', 'keyword.control.boron');
   has('(when true 1)', 'when', 'keyword.control.boron');
   has('(defmodule Demo)', 'defmodule', 'keyword.control.boron');
   has('(defclass Demo::User < Object)', 'defclass', 'keyword.control.boron');
   lacks('(.[] xs 0)', '[', 'punctuation.section.brackets.begin.boron');
-  has('(fn [x & xs] xs)', '&', 'keyword.operator.rest.boron');
+  has('(fn [x & xs] xs)', '&', 'keyword.operator.boron');
   has('(puts "hello") ; comment (fake)', '; comment', 'comment.line.semicolon.boron');
   has('"; (if :name) #{missing}"', ';', 'string.quoted.double.boron');
   lacks('"#{missing}"', 'missing', 'variable.other.boron');
@@ -89,8 +94,11 @@ async function main() {
   const word = new RegExp(configuration.wordPattern, 'g');
   assert.deepEqual('make-adder active? set! Sinatra::Base .[]'.match(word), ['make-adder', 'active?', 'set!', 'Sinatra::Base', '.[]']);
   assert(!configuration.autoClosingPairs.some(pair => pair.open === "'" || pair.open === '`'));
-  for (const file of fs.readdirSync(path.resolve(extensionRoot, '../../examples')).filter(file => file.endsWith('.bn'))) {
-    const source = fs.readFileSync(path.resolve(extensionRoot, '../../examples', file), 'utf8');
+  const examplesRoot = path.resolve(extensionRoot, '../../examples');
+  const examples = fs.readdirSync(examplesRoot).filter(file => file.endsWith('.bn'));
+  examples.push('sqlite_web/app.bn');
+  for (const file of examples) {
+    const source = fs.readFileSync(path.join(examplesRoot, file), 'utf8');
     let state = textmate.INITIAL;
     for (const line of source.split('\n')) state = grammar.tokenizeLine(line, state).ruleStack;
     assert.equal(state.depth, textmate.INITIAL.depth, `${file} ends inside an unclosed grammar scope`);

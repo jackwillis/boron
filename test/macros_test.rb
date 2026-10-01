@@ -79,6 +79,13 @@ class MacrosTest < Minitest::Test
     BN
     symbols = evaluate("[(gensym) (gensym)]")
     refute_equal symbols[0], symbols[1]
+    assert_equal 11, evaluate(<<~BN)
+      (defmacro same-spelling []
+        (let [generated (gensym "collision")
+              ordinary (.new Boron::Form::Identifier (.name generated))]
+          `(let [~ordinary 10 ~generated 1] (+ ~ordinary ~generated))))
+      (same-spelling)
+    BN
   end
 
   def test_macro_errors_include_call_site_and_bound_expansion

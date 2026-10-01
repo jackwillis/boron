@@ -103,6 +103,7 @@ Strings support `\n`, `\r`, `\t`, `\"`, and `\\`; they do not interpolate Ruby
 or Boron expressions. Functions return their last expression. False and nil are
 falsey; everything else is truthy. A Proc argument remains an argument unless
 passed through `send-with-block` or marked with `&` in a method send.
+In ordinary calls, `&` can name a user-defined callable; it has no builtin binding.
 
 Quotation, quasiquotation, defmacro, macroexpand, gensym, and the core macros
 `defn`, `when`, and `unless` are implemented. Named `defclass` and `defmodule`
@@ -123,6 +124,7 @@ Development uses Minitest 5 for tests and StandardRB (`standard`) for linting an
 formatting. Tests cover reader and compiler semantics, Ruby emission, and CLI
 subprocesses. Work proceeds through failing tests, implementation, and refactoring.
 Use `bundle exec standardrb --fix` to apply the agreed Ruby style.
+See [TESTING.md](TESTING.md) for the recent test audit and remaining coverage limits.
 
 VS Code highlighting and editing support lives in [editors/vscode](editors/vscode/README.md).
 It has no npm dependencies or build step; its README explains local loading and

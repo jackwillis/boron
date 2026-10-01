@@ -112,6 +112,9 @@ It does not depend on a shadowable Boron builtin. Ruby's normal block conversion
 applies, including nil and to_proc; ordinary sends retain Proc argument behavior.
 Use one call-site block marker rather than adding send& and .method& alternatives.
 The existing send-with-block primitive supports dynamic method names.
+Ampersand is contextual: a rest marker in parameter vectors and a block marker
+among method-send arguments. Ordinary call-head & resolves a callable binding;
+def/let/set! can bind it. No builtin & or do block syntax is added.
 
 Explicit keyword/splat syntax, try/throw forms, and class bodies/method syntax are future work. Hashes are not automatically converted to keyword arguments.
 

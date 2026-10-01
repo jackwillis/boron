@@ -283,6 +283,19 @@ once in that order. Without `&`, Proc arguments stay positional arguments.
 `send-with-block` remains useful for dynamically chosen method names. There is
 no `send&` alias or special `.method&` suffix.
 
+`&` is contextual syntax, not a globally reserved name. In a function parameter
+vector it introduces rest arguments; directly among method-send arguments it
+introduces the final block. At an ordinary call head it looks up a callable:
+
+```clojure
+(def & (fn [left right] (.& left right)))
+(& #{1 2} #{2 3}) ; Ruby Set containing 2
+```
+
+There is no built-in `&` binding yet: define one before calling it. `def`, `let`,
+and `set!` accept `&` as a binding name. `do` retains its existing sequence-form
+meaning; a `do` block marker remains a proposal.
+
 ## The small builtin library
 
 | Binding | Meaning |

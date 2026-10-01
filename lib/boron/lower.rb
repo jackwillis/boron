@@ -145,7 +145,7 @@ module Boron
     def identifier(form)
       error("expected a binding identifier", form) unless form.datum.is_a?(Form::Identifier)
       name = form.datum.name
-      error("invalid binding identifier #{name}", form) if name == "&" || name.start_with?(".") || name.include?("::")
+      error("invalid binding identifier #{name}", form) if name.start_with?(".") || name.include?("::")
       form.datum.binding_key
     end
 

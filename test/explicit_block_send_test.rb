@@ -47,4 +47,19 @@ class ExplicitBlockSendTest < Minitest::Test
     ruby = Boron::Compiler.new.compile("(.map [1 2] & (fn [x] (+ x 1)))", standalone: true)
     assert_equal [2, 3], Kernel.eval(ruby) # standard:disable Security/Eval
   end
+
+  def test_ampersand_callable_binding_coexists_with_block_and_rest_markers
+    source = <<~'BN'
+      (def & (fn [left right] (.& left right)))
+      (def intersection (& #{1 2} #{2 3}))
+      (def doubled (.map (.to_a intersection) & (fn [x] (* x 2))))
+      [intersection doubled ((fn [& xs] xs) 1 2)]
+    BN
+    assert_equal [Set[2], [4], [1, 2]], evaluate(source)
+    ruby = Boron::Compiler.new.compile(source, standalone: true)
+    assert_equal [Set[2], [4], [1, 2]], Kernel.eval(ruby) # standard:disable Security/Eval
+    assert_equal 5, evaluate("(let [& (fn [a b] (+ a b))] (& 2 3))")
+    assert_equal 6, evaluate("(def & +) (set! & *) (& 2 3)")
+    assert_raises(Boron::UnboundName) { evaluate("(& 1 2)") }
+  end
 end
