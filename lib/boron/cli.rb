@@ -4,6 +4,7 @@ module Boron
       Usage:
         boron run FILE.bn [-- PROGRAM_ARGS...]
         boron compile [--emit-ruby] FILE.bn
+        boron test FILE.bn [--filter TEXT]
         boron repl
         boron --help
     TEXT
@@ -12,6 +13,19 @@ module Boron
       if arguments == ["repl"]
         require_relative "repl"
         return REPL.new(input: input, out: out, err: err).run
+      end
+      if arguments.first == "test"
+        valid = arguments.length == 2 || (arguments.length == 4 && arguments[2] == "--filter")
+        unless valid
+          err.print USAGE
+          return 2
+        end
+        require_relative "spec"
+        runner = Spec::Runner.new(out: out, filter: arguments[3])
+        sources = runner.sources
+        path = arguments[1]
+        runner.load(File.read(path, encoding: "UTF-8"), filename: path)
+        return runner.run
       end
       args = arguments.dup
       if args == ["--help"] || args == ["-h"]

@@ -19,6 +19,50 @@ class CLITest < Minitest::Test
     end
   end
 
+  def test_spec_status_filtering_and_no_matches
+    program('(it "passing" [] (assert true)) (it "failing" [] (assert false))') do |path|
+      output, error, result = cli("test", path)
+      assert_equal 1, result.exitstatus
+      assert_empty error
+      assert_includes output, "FAIL: failing"
+      output, error, result = cli("test", path, "--filter", "passing")
+      assert_equal 0, result.exitstatus
+      assert_empty error
+      assert_includes output, "1 tests, 1 assertions, 0 failures, 0 errors"
+      output, error, result = cli("test", path, "--filter", "absent")
+      assert_equal 1, result.exitstatus
+      assert_empty error
+      assert_includes output, "No tests matched."
+    end
+  end
+
+  def test_spec_argument_validation_and_load_errors
+    [["test"], ["test", "file", "--filter"], ["test", "file", "--wrong", "value"],
+      ["test", "file", "extra"]].each do |arguments|
+      output, error, result = cli(*arguments)
+      assert_equal 2, result.exitstatus
+      assert_empty output
+      assert_includes error, "Usage:"
+    end
+    {"(if)" => "(if)", "[1" => "unclosed vector", "missing" => "unbound identifier",
+     "(/ 1 0)" => "ZeroDivisionError"}.each do |source, diagnostic|
+      program(source) do |path|
+        output, error, result = cli("test", path)
+        assert_equal 1, result.exitstatus
+        assert_empty output
+        assert_includes error, diagnostic
+      end
+    end
+    _, error, result = cli("test", "/tmp/boron-nonexistent-input-file.bn")
+    assert_equal 1, result.exitstatus
+    assert_includes error, "No such file"
+    program("") do |path|
+      output, _, result = cli("test", path)
+      assert_equal 1, result.exitstatus
+      assert_includes output, "No tests matched."
+    end
+  end
+
   def test_run_executes_the_program
     program("(puts (+ 1 (* 2 3)))") do |path|
       stdout, stderr, status = cli("run", path)

@@ -175,6 +175,49 @@ VS Code highlighting and editing support lives in [editors/vscode](editors/vscod
 It has no npm dependencies or build step; its README explains local loading and
 tokenizer tests.
 
+## Boron tests
+
+Run a spec file, optionally filtering by a substring of its full nested name:
+
+```sh
+bundle exec bin/boron test examples/cart_spec.bn
+bundle exec bin/boron test examples/cart_spec.bn --filter coffee
+```
+
+```clojure
+(describe "cart"
+  (before [s] (put s :items []))
+  (it "starts empty" [s]
+    (assert (= (count (get s :items)) 0))))
+```
+
+`context` aliases `describe`. Tests (`it`) and hooks (`before`, `after`) take
+`[]` or `[fixture]`. Each test gets a fresh hash shared with its hooks; local
+bindings inside a hook are not visible in the test. `get` reads a collection
+entry; `put` mutates it and returns the assigned value. These are Boron runtime
+functions and do not add methods to Ruby classes.
+
+Setup runs from outer groups to inner groups, in registration order. Teardown
+runs from inner groups to outer groups, in reverse registration order. All
+teardowns are attempted even when setup, the body, or another teardown fails.
+The runner continues with subsequent tests.
+
+`assert` checks Ruby truthiness; `refute` checks falsiness. Binary equality
+assertions evaluate both operands once and report actual and expected values,
+while respecting a locally bound `=`. `(assert-raises ArgumentError body...)`
+checks for an exception and returns it. The runner catches `StandardError` and
+`ScriptError`; process exit and interrupt exceptions propagate normally.
+
+Reports distinguish assertion failures from unexpected errors. Failure/error
+counts count individual problems, so one test can contribute multiple problems
+through its hooks. Locations identify test declarations, with macro-generated
+tests using their expansion call sites. Exit status is 0 for a passing selection,
+1 for failures, errors, load errors, or no matching tests, and 2 for invalid CLI
+arguments. DSL macros are loaded only into the test runner's session.
+
+Inside macro bodies, `(macro-location)` returns the current expansion call site
+as `filename:line:column`. It is available only in the macro expansion environment.
+
 ## Ruby API
 
 ```ruby
@@ -220,5 +263,5 @@ instructions for the web integration and editor tokenizer tests are in
 The workflow checks that the gem builds; it does not upload artifacts or publish
 releases. To try Boron today, use the checkout or build the gem locally.
 
-Boron-first testing, project scaffolding, Bundler-aware commands, and a task DSL
+Project scaffolding, Bundler-aware commands, and a task DSL
 are planned usability work; their scope and open decisions are in ROADMAP.md.

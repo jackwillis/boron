@@ -5,6 +5,14 @@ class MacrosTest < Minitest::Test
     Boron::Session.new.evaluate(source, filename: "macros.bn")
   end
 
+  def test_macro_location_is_the_current_call_site
+    session = Boron::Session.new
+    session.evaluate("(defmacro where [] (macro-location))", filename: "definitions.bn")
+    assert_equal "calls.bn:2:1", session.evaluate("\n(where)", filename: "calls.bn")
+    assert_equal "next.bn:1:1", session.evaluate("(where)", filename: "next.bn")
+    assert_raises(Boron::UnboundName) { session.evaluate("(macro-location)") }
+  end
+
   def test_quote_distinguishes_identifiers_lists_and_host_collections
     value = evaluate("'(missing :name [x] {:a 1} \#{1 2})")
     assert_instance_of Boron::Form::List, value

@@ -12,6 +12,11 @@ class SequenceTest < Minitest::Test
     assert_equal [0, 1], evaluate("(filter (fn [x] x) [false nil 0 1])")
   end
 
+  def test_put_mutates_collection_and_returns_value_without_extending_hash
+    assert_equal [12, {price: 12}], evaluate("(let [s {}] [(put s :price 12) s])")
+    refute Hash.method_defined?(:put)
+  end
+
   def test_reduce_group_by_and_count
     assert_equal 16, evaluate("(reduce + 10 [1 2 3])")
     assert_equal 10, evaluate("(reduce + 10 [])")

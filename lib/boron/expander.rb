@@ -5,6 +5,9 @@ module Boron
 
     def initialize
       @environment = Runtime.environment
+      @environment.define("macro-location", -> {
+        "#{@call_span.filename}:#{@call_span.start_line}:#{@call_span.start_column}"
+      })
       @macros = {}
       core = File.join(__dir__, "core.bn")
       expand_all(Reader.new(File.read(core), filename: core).read_all)
@@ -42,10 +45,14 @@ module Boron
         origins = {}
         arguments = value.items.drop(1).map { |item| SyntaxData.datum(item, origins: origins) }
         begin
+          previous_span = @call_span
+          @call_span = form.span
           result = @macros.fetch(name).call(*arguments)
           generated = SyntaxData.wrap(result, span: form.span, origin: MacroOrigin.new(name, form.span), origins: origins)
         rescue => error
           raise CompileError.new("macro #{name}: #{error.class}: #{error.message}", span: form.span, kind: :expansion)
+        ensure
+          @call_span = previous_span
         end
         return expand(generated, depth + 1)
       end

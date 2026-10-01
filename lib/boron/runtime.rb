@@ -60,6 +60,7 @@ module Boron
       env.define("print", ->(*values) { Kernel.print(*values) })
       env.define("require", ->(path) { Kernel.require(path) })
       env.define("get", ->(collection, key) { collection[key] })
+      env.define("put", ->(collection, key, value) { collection[key] = value })
       env.define("map", ->(function, collection) { collection.map { |value| function.call(value) } })
       env.define("filter", ->(predicate, collection) { collection.select { |value| predicate.call(value) } })
       env.define("reduce", ->(function, initial, collection) { collection.reduce(initial) { |result, value| function.call(result, value) } })

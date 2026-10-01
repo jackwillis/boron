@@ -1,0 +1,13 @@
+(describe "cart"
+  (before [s]
+    (put s :items []))
+
+  (context "with coffee"
+    (before [s]
+      (.push (get s :items) 12))
+
+    (it "includes its price" [s]
+      (assert (= (get (get s :items) 0) 12))))
+
+  (it "starts empty" [s]
+    (assert (= (count (get s :items)) 0))))

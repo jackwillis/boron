@@ -1,0 +1,40 @@
+; Compile-time validation shared by the DSL macros.
+(defmacro spec-parameters [parameters]
+  (if (.is_a? parameters Boron::Form::Vector)
+    (if (<= (count parameters) 1)
+      (if (= (count parameters) 1)
+        (if (.is_a? (first parameters) Boron::Form::Identifier)
+          (if (= (.name (first parameters)) "&")
+            (.raise Kernel ArgumentError "fixture parameters must be [] or [name]") nil)
+          (.raise Kernel ArgumentError "fixture parameters must be [] or [name]")) nil)
+      (.raise Kernel ArgumentError "fixture parameters must be [] or [name]"))
+    (.raise Kernel ArgumentError "fixture parameters must be [] or [name]")))
+; Loaded only by the spec runner. Tests and hooks accept [] or [fixture].
+(defmacro describe [name & body]
+  `(boron-spec-describe ~name (fn [] ~@body)))
+(defmacro context [name & body]
+  `(describe ~name ~@body))
+(defmacro it [name parameters & body]
+  (apply spec-parameters [parameters])
+  `(boron-spec-it ~name (fn ~parameters ~@body) ~(macro-location)))
+(defmacro before [parameters & body]
+  (apply spec-parameters [parameters])
+  `(boron-spec-before (fn ~parameters ~@body)))
+(defmacro after [parameters & body]
+  (apply spec-parameters [parameters])
+  `(boron-spec-after (fn ~parameters ~@body)))
+(defmacro assert [expression]
+  (if (list? expression)
+    (if (= (count expression) 3)
+      (if (= (if (.is_a? (first expression) Boron::Form::Identifier) (.name (first expression)) nil) "=")
+        (let [actual (gensym "actual") expected (gensym "expected")]
+          `(let [~actual ~(get (.items expression) 1)
+                 ~expected ~(get (.items expression) 2)]
+             (boron-spec-assert (= ~actual ~expected) '~expression [~actual ~expected])))
+        `(boron-spec-assert ~expression '~expression nil))
+      `(boron-spec-assert ~expression '~expression nil))
+    `(boron-spec-assert ~expression '~expression nil)))
+(defmacro refute [expression]
+  `(boron-spec-assert (not ~expression) '(refute ~expression) nil))
+(defmacro assert-raises [exception & body]
+  `(boron-spec-raises ~exception (fn [] ~@body)))
