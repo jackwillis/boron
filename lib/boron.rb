@@ -2,6 +2,7 @@ module Boron
 end
 
 require_relative "boron/version"
+require_relative "boron/diagnostics"
 require_relative "boron/form"
 require_relative "boron/syntax_data"
 require_relative "boron/reader"

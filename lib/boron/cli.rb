@@ -22,6 +22,8 @@ module Boron
       end
       path = args.first
       source = File.read(path, encoding: "UTF-8")
+      sources = SourceRegistry.new
+      sources.add(path, source)
       if command == "run"
         session = Session.new
         session.environment.define("ARGV", args.drop(2))
@@ -30,7 +32,10 @@ module Boron
         out.print Compiler.new.compile(source, filename: path, standalone: true)
       end
       0
-    rescue ReadError, CompileError, UnboundName => error
+    rescue ReadError, CompileError => error
+      err.print DiagnosticRenderer.new(sources || SourceRegistry.new).render(error.diagnostic)
+      1
+    rescue UnboundName => error
       err.puts error.message
       1
     rescue StandardError, ScriptError => error

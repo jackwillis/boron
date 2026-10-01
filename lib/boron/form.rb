@@ -49,12 +49,9 @@ module Boron
     Set = Class.new(Collection)
   end
 
-  class ReadError < StandardError
-    attr_reader :span
-
-    def initialize(message, span:)
-      @span = span
-      super("#{span.filename}:#{span.start_line}:#{span.start_column}: #{message}")
+  class ReadError < DiagnosticError
+    def initialize(message, span:, **options)
+      super(message, span: span, kind: :reader, **options)
     end
   end
 end

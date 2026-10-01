@@ -22,19 +22,19 @@ module Boron
     end
 
     def expand(form, depth = 0)
-      raise CompileError.new("macro expansion exceeded #{MAX_DEPTH} nested calls", span: form.span) if depth > MAX_DEPTH
+      raise CompileError.new("macro expansion exceeded #{MAX_DEPTH} nested calls", span: form.span, kind: :expansion) if depth > MAX_DEPTH
       value = form.datum
       return form unless value.is_a?(Form::Collection)
       name = head_name(form)
       return form if name == "quote"
       if name == "defmacro"
-        raise CompileError.new("defmacro is only supported at top level", span: form.span)
+        raise CompileError.new("defmacro is only supported at top level", span: form.span, kind: :expansion)
       elsif name == "quasiquote"
         return walk_quasiquote(form, depth)
       elsif name == "macroexpand"
         args = value.items.drop(1)
         unless args.length == 1 && head_name(args.first) == "quote" && args.first.datum.items.length == 2
-          raise CompileError.new("macroexpand expects one quoted form", span: form.span)
+          raise CompileError.new("macroexpand expects one quoted form", span: form.span, kind: :expansion)
         end
         expanded = expand(args.first.datum.items.last, depth)
         return Syntax.new(Form::List.new([value.items.first.then { |head| Syntax.new(Form::Identifier.new("quote"), head.span) }, expanded]), form.span)
@@ -45,7 +45,7 @@ module Boron
           result = @macros.fetch(name).call(*arguments)
           generated = SyntaxData.wrap(result, span: form.span, origin: MacroOrigin.new(name, form.span), origins: origins)
         rescue => error
-          raise CompileError.new("macro #{name}: #{error.class}: #{error.message}", span: form.span)
+          raise CompileError.new("macro #{name}: #{error.class}: #{error.message}", span: form.span, kind: :expansion)
         end
         return expand(generated, depth + 1)
       end
@@ -57,10 +57,10 @@ module Boron
     def register(form)
       _, name, parameters, *body = form.datum.items
       unless name&.datum.is_a?(Form::Identifier) && parameters&.datum.is_a?(Form::Vector)
-        raise CompileError.new("defmacro requires a name and parameter vector", span: form.span)
+        raise CompileError.new("defmacro requires a name and parameter vector", span: form.span, kind: :expansion)
       end
       if RESERVED.include?(name.datum.name)
-        raise CompileError.new("cannot redefine special form #{name.datum.name} as a macro", span: name.span)
+        raise CompileError.new("cannot redefine special form #{name.datum.name} as a macro", span: name.span, kind: :expansion)
       end
       function = Syntax.new(Form::List.new([Syntax.new(Form::Identifier.new("fn"), form.span), parameters, *body]), form.span)
       ruby = RubyEmitter.new.emit(Lower.new.lower_all([expand(function)]))

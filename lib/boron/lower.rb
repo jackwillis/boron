@@ -1,10 +1,7 @@
 module Boron
-  class CompileError < StandardError
-    attr_reader :span
-
-    def initialize(message, span:)
-      @span = span
-      super("#{span.filename}:#{span.start_line}:#{span.start_column}: #{message}")
+  class CompileError < DiagnosticError
+    def initialize(message, span:, kind: :compile, **options)
+      super
     end
   end
 
@@ -105,7 +102,7 @@ module Boron
       bindings = vector(args.first)
       error("let requires an even number of binding forms", args.first) if bindings.length.odd?
       names = bindings.each_slice(2).map { |name, _| identifier(name) }
-      error("duplicate let binding", args.first) unless names.uniq.length == names.length
+      check_duplicate_bindings(names, bindings.each_slice(2).map(&:first), "let", args.first)
       frames = bindings.each_slice(2).map { |name, value| [fresh("env"), name, value] }
       body = lower_all(args.drop(1), environment: frames.empty? ? parent : frames.last[0])
       frames.each_with_index.to_a.reverse_each do |(environment, name, value), index|
@@ -130,7 +127,7 @@ module Boron
         names = names.first(index)
       end
       all_names = names + [rest].compact
-      error("duplicate fn parameter", args.first) unless all_names.uniq.length == all_names.length
+      check_duplicate_bindings(all_names, parameters.reject { |item| SyntaxData.name(item) == "&" }, "fn", args.first)
       ruby_parameters = names.map { fresh("arg") }
       ruby_rest = fresh("rest") if rest
       environment = fresh("env")
@@ -140,6 +137,20 @@ module Boron
       end
       expressions << lower_all(args.drop(1), environment: environment)
       IR::Lambda.new(ruby_parameters, ruby_rest, IR::Sequence.new(expressions))
+    end
+
+    def check_duplicate_bindings(names, forms, kind, fallback)
+      seen = {}
+      names.each_with_index do |name, index|
+        if seen.key?(name)
+          current = forms[index] || fallback
+          first = forms[seen.fetch(name)] || fallback
+          raise CompileError.new("duplicate #{(kind == "fn") ? "fn parameter" : "let binding"}", span: current.span,
+            labels: [Label.new(first.span, "first bound here"), Label.new(current.span, "duplicate binding")],
+            help: "rename one of the bindings")
+        end
+        seen[name] = index
+      end
     end
 
     def identifier(form)
