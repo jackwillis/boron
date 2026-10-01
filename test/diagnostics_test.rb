@@ -39,6 +39,9 @@ class DiagnosticsTest < Minitest::Test
     assert_includes Boron::DiagnosticRenderer.new(sources).render(diagnostic), "^"
     missing = Boron::DiagnosticRenderer.new(Boron::SourceRegistry.new).render(diagnostic)
     assert_includes missing, "empty.bn:1:1:"
+    labeled = Boron::Diagnostic.new(kind: :compile, message: "failed", primary_span: span,
+      labels: [Boron::Label.new(span, "first bound here")])
+    assert_includes Boron::DiagnosticRenderer.new(Boron::SourceRegistry.new).render(labeled), "first bound here"
     sources.add("empty.bn", "a\nb")
     span = Boron::SourceSpan.new("empty.bn", 0, 3, 1, 1, 2, 2)
     diagnostic = Boron::Diagnostic.new(kind: :compile, message: "failed", primary_span: span)

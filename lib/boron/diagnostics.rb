@@ -67,7 +67,10 @@ module Boron
     def excerpt(span, message = nil)
       result = [" --> #{span.filename}:#{span.start_line}:#{span.start_column}:"]
       line = @sources.line(span.filename, span.start_line)
-      return result unless line
+      unless line
+        result[0] += " #{message}" if message
+        return result
+      end
       width = span.start_line.to_s.length
       prefix = line[0, span.start_column - 1].to_s.gsub(/[^\t]/, " ")
       length = if span.end_line == span.start_line
