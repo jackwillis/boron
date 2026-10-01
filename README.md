@@ -25,7 +25,7 @@ works today and [ROADMAP.md](ROADMAP.md) for what comes next.
 
 ## Quick start
 
-Use Ruby 3.3 or newer (currently verified on Ruby 4.0.7). No external runtime gems
+Use Ruby 3.3 or newer. No external runtime gems
 are required for Boron itself. Required host libraries still need to be installed.
 
 Clone the repository and run an example directly; Bundler is only needed for
@@ -83,6 +83,9 @@ Pass program arguments after `--`; the program sees only those arguments in
 (.generate JSON {:name "Ada" :active true})
 
 (send-with-block [1 2 3] :map []
+  (fn [x] (* x 2))) ; [2 4 6]
+
+(.map [1 2 3] &
   (fn [x] (* x 2))) ; [2 4 6]
 ```
 

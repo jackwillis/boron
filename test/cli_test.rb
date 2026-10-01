@@ -66,4 +66,42 @@ class CLITest < Minitest::Test
     assert result.success?, error
     assert_includes output, "compile"
   end
+
+  def test_reader_binding_and_library_errors_have_failure_status
+    {"[1" => "unclosed vector", "missing" => "unbound identifier missing",
+     '(require "boron_missing_library_for_test")' => "LoadError"}.each do |source, diagnostic|
+      program(source) do |path|
+        output, error, result = cli("run", path)
+        assert_equal 1, result.exitstatus
+        assert_empty output
+        assert_includes error, diagnostic
+      end
+    end
+  end
+
+  def test_compile_without_flag_does_not_execute_side_effects
+    program('(puts "should only appear when run")') do |path|
+      ruby, error, result = cli("compile", path)
+      assert result.success?, error
+      assert_empty error
+      assert_includes ruby, 'require "boron"'
+      assert ruby.start_with?("# frozen_string_literal: true\n")
+      output, stderr, status = cli("run", path)
+      assert status.success?, stderr
+      assert_equal "should only appear when run\n", output
+    end
+  end
+
+  def test_invalid_argument_counts_and_short_help
+    [[], ["run"], ["compile"], ["run", "a", "b"], ["compile", "--emit-ruby"]].each do |arguments|
+      output, error, result = cli(*arguments)
+      assert_equal 2, result.exitstatus
+      assert_empty output
+      assert_includes error, "Usage:"
+    end
+    output, error, result = cli("-h")
+    assert result.success?, error
+    assert_empty error
+    assert_includes output, "Usage:"
+  end
 end

@@ -106,4 +106,33 @@ class ReaderTest < Minitest::Test
   def test_bracket_method_identifier
     assert_equal ".[]", read("(.[] [1] 0)").first.datum.items.first.datum.name
   end
+
+  def test_nonfinite_float_literals_are_rejected_at_their_source_location
+    %w[1e999 -1e999 +1.0e999].each do |literal|
+      error = assert_raises(Boron::ReadError) { read("\n  #{literal}") }
+      assert_match(/test\.bn:2:3: float literal out of range/, error.message)
+    end
+    assert_equal 1e308, read("1e308").first.datum
+  end
+
+  def test_numeric_lookalikes_and_commas_remain_identifiers
+    names = %w[1. .5 1e 0xff 1,2]
+    assert_equal names, read(names.join(" ")).map { |form| form.datum.name }
+  end
+
+  def test_empty_collections_multiline_strings_and_bracket_setters
+    forms = read('[] {} #{} "first' + "\n" + 'last" (.[]= xs 0 1)') # standard:disable Lint/InterpolationCheck
+    forms.first(3).each { |form| assert_empty form.datum.items }
+    assert_equal "first\nlast", forms[3].datum
+    assert_equal [1, 11, 2, 6], [forms[3].span.start_line, forms[3].span.start_column,
+      forms[3].span.end_line, forms[3].span.end_column]
+    assert_equal ".[]=", forms[4].datum.items.first.datum.name
+  end
+
+  def test_unclosed_maps_sets_and_trailing_string_escape
+    {"{:x 1" => "unclosed map", '#{1' => "unclosed set", '"abc' + "\\" => "unclosed string"}.each do |source, message|
+      error = assert_raises(Boron::ReadError) { read(source) }
+      assert_includes error.message, message
+    end
+  end
 end
