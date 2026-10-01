@@ -113,7 +113,7 @@ applies, including nil and to_proc; ordinary sends retain Proc argument behavior
 Use one call-site block marker rather than adding send& and .method& alternatives.
 The existing send-with-block primitive supports dynamic method names.
 
-Explicit keyword/splat syntax, try/throw forms, and class syntax are future work. Hashes are not automatically converted to keyword arguments.
+Explicit keyword/splat syntax, try/throw forms, and class bodies/method syntax are future work. Hashes are not automatically converted to keyword arguments.
 
 ## Dependency research
 
@@ -177,3 +177,21 @@ Macros are not automatically hygienic; authors must use gensym for introduced
 bindings. Core defn/when/unless live in lib/boron/core.bn and ship with the gem.
 Macroexpand is compile-time syntax accepting exactly one quoted form; it returns
 the recursively expanded datum without running the resulting program.
+
+## Named class and module declarations
+
+Defclass and defmodule are Boron macros in core.bn, not new parser or lowering
+special cases. They validate literal constant-path identifiers at expansion time
+and emit calls to Runtime.declare_class / declare_module. A superclass expression
+is evaluated once at runtime. Class creation uses Class.new; constants are named
+through const_set. Qualified paths require existing parent namespaces.
+
+Matching declarations reuse the existing Ruby object; mismatched constant types
+or explicit superclasses raise TypeError. No inherited constant is accidentally
+reused or overwritten. Declarations return the object and do not add a separate
+Boron root binding. Ruby constants are intentionally shared across sessions.
+
+The accepted surface is `(defmodule Name)`, `(defclass Name)`, and
+`(defclass Name < Superclass)`. Bodies, methods, implicit self, and automatic
+namespace creation are not part of this slice. Keep ordinary def semantics
+unchanged, and retain explicit Ruby interop as the escape hatch.

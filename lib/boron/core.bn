@@ -7,3 +7,16 @@
 
 (defmacro unless [condition & body]
   `(if ~condition nil (do ~@body)))
+
+(defmacro defmodule [name]
+  `(.declare_module Boron::Runtime ~(.constant_name Boron::Runtime name)))
+
+(defmacro defclass [name & inheritance]
+  (let [path (.constant_name Boron::Runtime name)]
+    (if (= (count inheritance) 0)
+      `(.declare_class Boron::Runtime ~path)
+      (if (= (count inheritance) 2)
+        (if (= (first inheritance) '<)
+          `(.declare_class Boron::Runtime ~path ~(get inheritance 1))
+          (.raise Kernel ArgumentError "defclass expects Name or Name < Superclass"))
+        (.raise Kernel ArgumentError "defclass expects Name or Name < Superclass")))))

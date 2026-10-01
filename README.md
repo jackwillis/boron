@@ -105,8 +105,9 @@ falsey; everything else is truthy. A Proc argument remains an argument unless
 passed through `send-with-block` or marked with `&` in a method send.
 
 Quotation, quasiquotation, defmacro, macroexpand, gensym, and the core macros
-`defn`, `when`, and `unless` are implemented. Class syntax, keyword/splat
-arguments, destructuring, and a REPL remain future work. Runtime backtraces
+`defn`, `when`, and `unless` are implemented. Named `defclass` and `defmodule`
+declarations are implemented. Class bodies/methods, keyword/splat arguments,
+destructuring, and a REPL remain future work. Runtime backtraces
 currently refer to generated Ruby lines; source map work remains ahead.
 
 ## Development

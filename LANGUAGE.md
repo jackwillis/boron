@@ -227,6 +227,33 @@ Hashes stay positional Hash arguments. There is no automatic conversion into
 Ruby keyword arguments. Splat, double-splat, and keyword argument syntax remain
 open design work.
 
+## Named Ruby classes and modules
+
+```clojure
+(defmodule BoronDemo)
+(defmodule BoronDemo::Models)
+(defclass BoronDemo::Models::User < ActiveRecord::Base)
+(defclass BoronDemo::Plain)
+```
+
+These are bundled macros that create named Ruby constants and return the actual
+Module or Class. A new class defaults to Object as its superclass. After `<`, a
+superclass expression is evaluated once and must return a Ruby Class. Names must
+be unquoted uppercase identifiers or qualified constant paths. Declare parent
+namespaces first; missing namespaces are not created implicitly.
+
+Declarations affect Ruby's shared constant space, not a session's Boron bindings.
+Existing modules/classes are reused. An explicit superclass must match an
+existing class; a class declaration without `<` leaves its superclass unchanged.
+A conflicting constant type raises TypeError rather than replacing the constant.
+Constant lookup for ownership and reuse excludes inherited constants. These
+rules allow safe repetition of matching declarations across sessions, though
+Ruby's normal global state remains shared.
+
+This slice accepts no declaration bodies. Methods, slots, nested-body name
+resolution, and implicit self are deferred. `.const_set` remains available for
+other Ruby constant operations.
+
 ## Blocks must be passed deliberately
 
 A Ruby block is distinct from an ordinary Proc argument:
@@ -338,8 +365,8 @@ Macros are not automatically hygienic. `(macroexpand 'form)` returns a fully
 expanded form datum without executing it. Expansion failures report the call
 site; reused structural arguments retain their own source locations.
 
-Later, class syntax should construct real Ruby classes through a small primitive
-API, with macros providing the convenient surface. Sequence helpers, threading
+Later, class bodies and method syntax should extend the small runtime API behind
+`defclass` and `defmodule`. Sequence helpers, threading
 macros, destructuring, and a REPL should make Boron comfortable for everyday work.
 Protocols may eventually add abstraction over existing Ruby classes without
 monkey-patching them.

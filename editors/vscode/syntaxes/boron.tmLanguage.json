@@ -89,7 +89,7 @@
     "head": {
       "name": "meta.call.head.boron",
       "begin": "\\G",
-      "end": "(?:(def)(?=$|[\\s()\\[\\]{};\"'`~#])[ \\t]+([^\\s()\\[\\]{};\"'`~#:]+)(?=$|[\\s()\\[\\]{};\"'`~#])|((?:def|let|fn|if|do|set!|quote|quasiquote|unquote|unquote-splicing|defmacro|macroexpand|defn|when|unless))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:\\.\\[\\]=?|\\.[^\\s()\\[\\]{};\"'`~#]+))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:\\+|-|\\*|/|%|==|=|!=|<=|<|>=|>))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:list|vector|list\\?|first|rest|cons|concat|apply|gensym|not|puts|print|get|map|filter|reduce|group-by|count|require|send-with-block|send))(?=$|[\\s()\\[\\]{};\"'`~#])|([^\\s()\\[\\]{};\"'`~#:]+)(?=$|[\\s()\\[\\]{};\"'`~#])|(?=[()\\[\\]{}\"'`~#:]))",
+      "end": "(?:(def)(?=$|[\\s()\\[\\]{};\"'`~#])[ \\t]+([^\\s()\\[\\]{};\"'`~#:]+)(?=$|[\\s()\\[\\]{};\"'`~#])|((?:def|let|fn|if|do|set!|quote|quasiquote|unquote|unquote-splicing|defmacro|macroexpand|defn|when|unless|defclass|defmodule))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:\\.\\[\\]=?|\\.[^\\s()\\[\\]{};\"'`~#]+))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:\\+|-|\\*|/|%|==|=|!=|<=|<|>=|>))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:list|vector|list\\?|first|rest|cons|concat|apply|gensym|not|puts|print|get|map|filter|reduce|group-by|count|require|send-with-block|send))(?=$|[\\s()\\[\\]{};\"'`~#])|([^\\s()\\[\\]{};\"'`~#:]+)(?=$|[\\s()\\[\\]{};\"'`~#])|(?=[()\\[\\]{}\"'`~#:]))",
       "endCaptures": {
         "1": {
           "name": "keyword.control.boron"

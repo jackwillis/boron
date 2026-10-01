@@ -1,11 +1,11 @@
-; Real Ruby gems, called explicitly from Boron. No class or route DSL required.
+; Real Ruby gems, with named Ruby classes and explicit block sends.
 (require "active_record")
 (require "sqlite3")
 (require "sinatra/base")
 (require "json")
 
-(.const_set Object :BoronDemo (.new Module))
-(.const_set BoronDemo :User (.new Class ActiveRecord::Base))
+(defmodule BoronDemo)
+(defclass BoronDemo::User < ActiveRecord::Base)
 (.table_name= BoronDemo::User "users")
 (.establish_connection ActiveRecord::Base
   {:adapter "sqlite3"
@@ -18,7 +18,7 @@
   (.create! BoronDemo::User {:name "Ada"})
   (.create! BoronDemo::User {:name "Grace"}))
 
-(.const_set BoronDemo :App (.new Class Sinatra::Base))
+(defclass BoronDemo::App < Sinatra::Base)
 (.set BoronDemo::App :bind "127.0.0.1")
 (.set BoronDemo::App :port 4567)
 

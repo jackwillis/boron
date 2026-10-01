@@ -37,20 +37,23 @@ Tests use temporary file databases, verify JSON/404 responses, observe database
 changes, preserve rows through reloading, and execute emitted Ruby in a fresh
 process. The core lint/test commands remain the ones in the repository README.
 
-## Why no new class or route syntax?
+## Named classes and explicit routes
 
-`Class.new(ActiveRecord::Base)` constructs a real model class. `const_set` names
-it before ActiveRecord needs its model identity. `.get` registers real Sinatra
-routes and `.create_table` passes the schema callback to ActiveRecord, using an
-explicit `&` before the final block expression. Route callbacks
-return `[status, headers, [body]]`, as supported by Sinatra/Rack. JSON generation
-and queries are the real Ruby gems, not Boron implementations.
+`defmodule BoronDemo` creates a real Ruby module. `defclass BoronDemo::User <
+ActiveRecord::Base` creates and names a real Ruby model class before ActiveRecord
+needs its model identity. Both declarations are bundled Boron macros over small
+runtime helpers. `.get` registers real Sinatra routes and `.create_table` passes
+the schema callback to ActiveRecord, using `&` before the final block expression.
+Route callbacks return `[status, headers, [body]]`, as supported by Sinatra/Rack.
+JSON generation and queries are the real Ruby gems, not Boron implementations.
 
-The app uses the bundled `defn`, `when`, and `unless` convenience macros, but its
-class/route interop also works using only `def`, `fn`, and `if`. Macros are not
-required to use these gems. This example has read-only routes; request parameters,
-Ruby instance context, explicit keywords, and a class DSL are later design work.
-The table setup is a small single-process demo bootstrap, not a migration system.
+The app also uses the bundled `defn`, `when`, and `unless` convenience macros.
+The same interop is possible through Class.new, const_set, def/fn/if, and explicit
+block sends; macros make the declarations more readable. Declarations currently
+have no bodies. This example has read-only routes; request parameters, Ruby
+instance context, explicit keywords, methods, and class bodies are later design
+work. The table setup is a small single-process demo bootstrap, not a migration
+system.
 
 Checked October 1, 2026 against ActiveRecord 8.1.4, Sinatra 4.2.1, sqlite3 2.9.6,
 and Puma 8.0.2 on Ruby 4.0.7. References:

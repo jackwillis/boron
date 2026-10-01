@@ -67,6 +67,8 @@ async function main() {
   has('(.get App "/" & (fn [] "hello"))', '&', 'keyword.operator.rest.boron');
   has('(defmacro twice [x] `(+ ~x ~x))', 'defmacro', 'keyword.control.boron');
   has('(when true 1)', 'when', 'keyword.control.boron');
+  has('(defmodule Demo)', 'defmodule', 'keyword.control.boron');
+  has('(defclass Demo::User < Object)', 'defclass', 'keyword.control.boron');
   lacks('(.[] xs 0)', '[', 'punctuation.section.brackets.begin.boron');
   has('(fn [x & xs] xs)', '&', 'keyword.operator.rest.boron');
   has('(puts "hello") ; comment (fake)', '; comment', 'comment.line.semicolon.boron');

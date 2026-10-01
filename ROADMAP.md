@@ -13,7 +13,7 @@ in small, test-driven slices. Future syntax examples are not implemented promise
 | P2 | Initial Ruby interop | Explicit sends, constants, require, real JSON library | Complete for this slice |
 | P3 | Macros | Quote, quasiquote, expansion, defmacro, macroexpand, gensym | Complete for this slice |
 | P4 | Ruby blocks | Explicit block passing with Enumerable and File.open | Explicit call-site & marker complete |
-| P5 | Classes | Real Class values, methods, state; macro sugar follows primitives | Planned |
+| P5 | Classes | Real Class values, methods, state; macro sugar follows primitives | Named defclass/defmodule complete; bodies/methods deferred |
 | P6–P7 | Usability and ecosystem | REPL, core macros/sequence helpers, real gem examples | Sequence helpers and gem example complete; REPL deferred |
 | P8+ | Further abstractions/tooling | Protocols, editor tooling; optional backend experiments | Deferred |
 
@@ -69,7 +69,7 @@ Acceptance criteria:
   build on the existing primitive.
 - Define exception forms over Ruby's exception machinery.
 - Plan source maps for generated Ruby backtraces.
-- Design class/method primitives only after macros are established.
+- Design methods, class/module bodies, and self over the named declaration primitives.
 
 Destructuring, namespaces, persistent collections, protocols, self-hosting, Rails,
 direct YARV, and optimization remain outside the bootstrap scope.
@@ -77,7 +77,7 @@ direct YARV, and optimization remain outside the bootstrap scope.
 ## Next bounded work
 
 The optional `examples/sqlite_web` JSON API exercises real ActiveRecord classes,
-SQLite persistence, Sinatra blocks, and compiled execution without a class DSL.
+SQLite persistence, Sinatra blocks, named class/module macros, and compiled execution.
 Keep its dependencies separate. Next, implement the first diagnostic slice in
 DIAGNOSTICS.md, then a small REPL. Request-context interop, keyword arguments,
-and class/method syntax need explicit design before a CRUD web example.
+and class bodies/method syntax need explicit design before a CRUD web example.

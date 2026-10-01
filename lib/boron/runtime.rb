@@ -40,6 +40,8 @@ module Boron
   end
 
   module Runtime
+    CONSTANT_PATH = /\A[A-Z][A-Za-z0-9_]*(?:::[A-Z][A-Za-z0-9_]*)*\z/
+
     module_function
 
     def environment
@@ -85,6 +87,51 @@ module Boron
     def send_with_block(receiver, method, arguments, block)
       receiver.public_send(method, *arguments, &block)
     end
+
+    def constant_name(form)
+      unless form.is_a?(Form::Identifier) && CONSTANT_PATH.match?(form.name)
+        raise ArgumentError, "declaration requires an uppercase constant name or path"
+      end
+      form.name
+    end
+
+    def declare_module(path)
+      owner, name = constant_owner(path)
+      if owner.const_defined?(name, false)
+        value = owner.const_get(name, false)
+        raise TypeError, "#{path} already exists and is not a module" unless value.instance_of?(Module)
+        value
+      else
+        owner.const_set(name, Module.new)
+      end
+    end
+
+    def declare_class(path, *superclasses)
+      raise ArgumentError, "class declaration accepts at most one superclass" if superclasses.length > 1
+      superclass = superclasses.empty? ? Object : superclasses.first
+      raise TypeError, "superclass must be a Ruby Class" unless superclass.is_a?(Class)
+      owner, name = constant_owner(path)
+      if owner.const_defined?(name, false)
+        value = owner.const_get(name, false)
+        raise TypeError, "#{path} already exists and is not a class" unless value.is_a?(Class)
+        if !superclasses.empty? && value.superclass != superclass
+          raise TypeError, "superclass mismatch for #{path}"
+        end
+        value
+      else
+        owner.const_set(name, Class.new(superclass))
+      end
+    end
+
+    def constant_owner(path)
+      raise ArgumentError, "invalid constant path" unless path.is_a?(String) && CONSTANT_PATH.match?(path)
+      parts = path.split("::")
+      name = parts.pop
+      owner = parts.reduce(Object) { |scope, part| scope.const_get(part, false) }
+      raise TypeError, "constant namespace must be a Ruby Module or Class" unless owner.is_a?(Module)
+      [owner, name]
+    end
+    private_class_method :constant_owner
 
     def splice(value)
       return value.items if value.is_a?(Form::List) || value.is_a?(Form::Vector)
