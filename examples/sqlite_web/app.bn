@@ -1,0 +1,39 @@
+; Real Ruby gems, called explicitly from Boron. No class or route DSL required.
+(require "active_record")
+(require "sqlite3")
+(require "sinatra/base")
+(require "json")
+
+(.const_set Object :BoronDemo (.new Module))
+(.const_set BoronDemo :User (.new Class ActiveRecord::Base))
+(.table_name= BoronDemo::User "users")
+(.establish_connection ActiveRecord::Base
+  {:adapter "sqlite3"
+   :database (.fetch ENV "BORON_DATABASE" "boron-demo.sqlite3")})
+
+(def connection (.connection ActiveRecord::Base))
+(unless (.table_exists? connection "users")
+  (send-with-block connection :create_table ["users"]
+    (fn [table] (.string table "name")))
+  (.create! BoronDemo::User {:name "Ada"})
+  (.create! BoronDemo::User {:name "Grace"}))
+
+(.const_set BoronDemo :App (.new Class Sinatra::Base))
+(.set BoronDemo::App :bind "127.0.0.1")
+(.set BoronDemo::App :port 4567)
+
+(defn json-response [value]
+  [200 {"content-type" "application/json"} [(.generate JSON value)]])
+
+(send-with-block BoronDemo::App :get ["/health"]
+  (fn [] (json-response {"status" "ok" "users" (.count BoronDemo::User)})))
+
+(send-with-block BoronDemo::App :get ["/users"]
+  (fn []
+    (json-response
+      (map (fn [user] {"id" (.id user) "name" (.name user)})
+        (.order BoronDemo::User :id)))))
+
+; Loading creates the app; only the explicit --serve argument starts a server.
+(when (= ARGV ["--serve"])
+  (.run! BoronDemo::App))

@@ -1,3 +1,5 @@
 /.bundle/
 /vendor/bundle/
+**/vendor/bundle/
+**/*.sqlite3*
 /*.gem

@@ -1,7 +1,7 @@
 # Boron
 
 Boron is a Lisp hosted on Ruby. Ruby provides runtime values and libraries;
-Boron provides S-expressions and lexical functions. Macros are the next milestone.
+Boron provides S-expressions, lexical functions, and compile-time macros.
 
 This is an experimental bootstrap compiler written in Ruby. It reads Boron forms,
 lowers them to a small Ruby IR, emits Ruby source, and executes through Ruby.
@@ -104,17 +104,18 @@ or Boron expressions. Functions return their last expression. False and nil are
 falsey; everything else is truthy. A Proc argument remains an argument unless
 passed through `send-with-block`.
 
-Quotation, macros, class primitives, keyword/splat argument syntax, destructuring,
-and a REPL are not implemented. Runtime backtraces currently refer to generated
-Ruby lines; source map work remains ahead.
+Quotation, quasiquotation, defmacro, macroexpand, gensym, and the core macros
+`defn`, `when`, and `unless` are implemented. Class syntax, keyword/splat
+arguments, destructuring, and a REPL remain future work. Runtime backtraces
+currently refer to generated Ruby lines; source map work remains ahead.
 
 ## Development
 
 ```sh
 bundle config set --local path vendor/bundle
 bundle install
-bundle exec ruby -Itest test/all_test.rb
 bundle exec standardrb
+bundle exec ruby -Itest test/all_test.rb
 ```
 
 Development uses Minitest 5 for tests and StandardRB (`standard`) for linting and
@@ -147,3 +148,7 @@ and their global state are shared normally.
 See [the informal language spec](LANGUAGE.md), [the original proposal](SPEC.md), [current decisions](DESIGN.md), and
 [the milestone backlog](ROADMAP.md). The proposal includes tentative syntax and
 aspirational examples; it is not a statement of implemented features.
+
+An optional database-backed web example is in
+[examples/sqlite_web](examples/sqlite_web/README.md), with its own gem bundle.
+See [DIAGNOSTICS.md](DIAGNOSTICS.md) for the proposed next error-system slice.

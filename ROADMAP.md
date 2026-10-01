@@ -14,7 +14,7 @@ in small, test-driven slices. Future syntax examples are not implemented promise
 | P3 | Macros | Quote, quasiquote, expansion, defmacro, macroexpand, gensym | Complete for this slice |
 | P4 | Ruby blocks | Explicit block passing with Enumerable and File.open | Primitive complete; surface syntax deferred |
 | P5 | Classes | Real Class values, methods, state; macro sugar follows primitives | Planned |
-| P6–P7 | Usability and ecosystem | REPL, core macros/sequence helpers, real gem examples | Planned |
+| P6–P7 | Usability and ecosystem | REPL, core macros/sequence helpers, real gem examples | Sequence helpers and gem example complete; REPL deferred |
 | P8+ | Further abstractions/tooling | Protocols, editor tooling; optional backend experiments | Deferred |
 
 ## Completed bootstrap acceptance
@@ -44,7 +44,8 @@ file, filters active users, and summarizes names and role counts. Its five seque
 helpers (`map`, `filter`, `reduce`, `group-by`, `count`) work with Ruby Enumerable.
 CLI program arguments are routed explicitly after `--`. Integration tests cover
 the report's results, failures, and compiled execution. Quotation and macros are
-now implemented; a real gem example and REPL follow.
+now implemented; a SQLite/ActiveRecord/Sinatra example is complete. REPL and structured
+diagnostics remain next.
 
 The quotation/data API is implemented. Macro inputs and outputs must be forms, while
 syntax objects retain source context. Do not confuse runtime Arrays with code
@@ -61,7 +62,8 @@ Acceptance criteria:
 
 ## Remaining design questions
 
-- Reserve core special-form names or define an explicit shadowing policy.
+- Core special-form names are reserved against macro redefinition; revisit other
+  binding shadowing only with an explicit policy.
 - Design keyword/splat arguments; do not automatically reinterpret every Hash.
 - Choose block syntax over the working `send-with-block` primitive.
 - Define exception forms over Ruby's exception machinery.
@@ -70,3 +72,11 @@ Acceptance criteria:
 
 Destructuring, namespaces, persistent collections, protocols, self-hosting, Rails,
 direct YARV, and optimization remain outside the bootstrap scope.
+
+## Next bounded work
+
+The optional `examples/sqlite_web` JSON API exercises real ActiveRecord classes,
+SQLite persistence, Sinatra blocks, and compiled execution without a class DSL.
+Keep its dependencies separate. Next, implement the first diagnostic slice in
+DIAGNOSTICS.md, then a small REPL. Request-context interop, keyword arguments,
+and class/method syntax need explicit design before a CRUD web example.
