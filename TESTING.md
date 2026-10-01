@@ -22,9 +22,10 @@ that no further defects exist.
 
 ## Remaining limits
 
-The root CI matrix runs lint and core Minitests. Optional web integration and
-VS Code tokenizer tests are currently local checks. Local execution was on Ruby
-4.0.7; the configured Ruby 3.3/3.4/4.0 CI matrix has not been run from this session.
+The root CI matrix runs lint and core Minitests on Ruby 3.3/3.4/4.0.
+Separate CI jobs run web integration on Ruby 4.0 and tokenizer tests with stable
+VS Code. The gem build waits for all of these checks. Local execution was on Ruby
+4.0.7; the expanded CI matrix has not been run from this session.
 Editor testing uses the installed VS Code engine rather than adding npm packages.
 
 No tests yet guard concurrent declaration races, arbitrary parser/macro fuzzing,

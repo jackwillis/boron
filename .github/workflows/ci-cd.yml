@@ -29,9 +29,46 @@ jobs:
       - name: Run Minitest
         run: bundle exec ruby -Itest test/all_test.rb
 
+  web:
+    name: SQLite web integration — Ruby 4.0
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: examples/sqlite_web/Gemfile
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+      - name: Set up Ruby and example bundle
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+      - name: Run web integration tests
+        run: bundle exec ruby examples/sqlite_web/app_test.rb
+
+  editor:
+    name: VS Code tokenizer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+      - name: Download stable VS Code
+        run: |
+          curl --fail --location --retry 3 https://update.code.visualstudio.com/latest/linux-x64/stable -o "$RUNNER_TEMP/vscode.tar.gz"
+          mkdir -p "$RUNNER_TEMP/vscode"
+          tar -xzf "$RUNNER_TEMP/vscode.tar.gz" -C "$RUNNER_TEMP/vscode" --strip-components=1
+      - name: Run tokenizer tests with VS Code's engine
+        env:
+          ELECTRON_RUN_AS_NODE: "1"
+        run: |
+          modules="$RUNNER_TEMP/vscode/resources/app/node_modules.asar"
+          if [ ! -e "$modules" ]; then
+            modules="$RUNNER_TEMP/vscode/resources/app/node_modules"
+          fi
+          BORON_VSCODE_MODULES="$modules" "$RUNNER_TEMP/vscode/code" editors/vscode/test/grammar.cjs
+
   cd:
     name: CD — Build gem
-    needs: ci
+    needs: [ci, web, editor]
     runs-on: ubuntu-latest
     steps:
       - name: Check out source

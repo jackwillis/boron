@@ -25,7 +25,7 @@ works today and [ROADMAP.md](ROADMAP.md) for what comes next.
 
 ## Quick start
 
-Use Ruby 3.2 or newer (currently verified on Ruby 4.0.7). No external runtime gems
+Use Ruby 3.3 or newer (currently verified on Ruby 4.0.7). No external runtime gems
 are required for Boron itself. Required host libraries still need to be installed.
 
 Clone the repository and run an example directly; Bundler is only needed for
@@ -170,16 +170,18 @@ boron run examples/make_adder.bn
 The gem packages the runtime, `bin/boron`, examples, and language documentation.
 Its version is defined in `lib/boron/version.rb`. Development tools and editor
 files are not included, and the gem has no external runtime dependencies.
-A project license has not yet been selected.
+Boron is available under the [MIT license](LICENSE).
 
 ## Continuous integration
 
 The [GitHub Actions workflow](https://github.com/jackwillis/boron/actions/workflows/ci-cd.yml)
 runs StandardRB followed by Minitest on Ruby 3.3, 3.4, and 4.0 for pushes,
-pull requests, and manual runs. After all three pass, it builds the gem on Ruby
-4.0. The badge above reports the overall workflow status on `main`, including
-lint, tests, and the gem build. Optional web integration and editor tokenizer
-tests have separate local instructions in [TESTING.md](TESTING.md).
+pull requests, and manual runs. Separate jobs run the SQLite web integration
+tests on Ruby 4.0 and the editor tokenizer tests with stable VS Code. After all
+checks pass, it builds the gem on Ruby 4.0. The badge above reports the overall
+workflow status on `main`, including lint, tests, and the gem build. Local
+instructions for the web integration and editor tokenizer tests are in
+[TESTING.md](TESTING.md).
 
 The workflow checks that the gem builds; it does not upload artifacts or publish
 releases. To try Boron today, use the checkout or build the gem locally.
