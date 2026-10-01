@@ -1,0 +1,4 @@
+(require "json")
+
+(def user {:name "Ada" :active true})
+(puts (.generate JSON user))

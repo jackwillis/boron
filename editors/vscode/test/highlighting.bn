@@ -1,0 +1,25 @@
+; Boron highlighting preview. This is also an executable program.
+; region Lexical functions
+(def make-adder
+  (fn [x]
+    (fn [y] (+ x y))))
+(def add2 (make-adder 2))
+(puts (add2 -12))
+; endregion
+
+(let [name "Ada" active? true missing nil]
+  (if active?
+    (puts (.upcase name))
+    (puts missing)))
+
+(require "json")
+(puts (.generate JSON {:name "Ada" :amount 2.5e-3 :active false}))
+(puts (.inspect #{:ruby :lisp :macros}))
+
+(let [xs [1 2 3]]
+  (.[]= xs 0 10)
+  (puts (.[] xs 0)))
+
+(puts ((fn [first & remaining] remaining) 1 2 3))
+(puts "Escapes: \"quotes\", \\backslash, \nnewline, \ttab")
+(puts "Literal text: #{not-interpolation}; still a string")

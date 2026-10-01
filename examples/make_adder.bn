@@ -1,0 +1,7 @@
+(def make-adder
+  (fn [x]
+    (fn [y]
+      (+ x y))))
+
+(def add2 (make-adder 2))
+(puts (add2 5))

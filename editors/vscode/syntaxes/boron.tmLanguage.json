@@ -1,0 +1,242 @@
+{
+  "name": "Boron",
+  "scopeName": "source.boron",
+  "patterns": [
+    {
+      "include": "#forms"
+    }
+  ],
+  "repository": {
+    "forms": {
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "include": "#list"
+        },
+        {
+          "include": "#vector"
+        },
+        {
+          "include": "#set"
+        },
+        {
+          "include": "#map"
+        },
+        {
+          "include": "#quote"
+        },
+        {
+          "include": "#symbol"
+        },
+        {
+          "include": "#boolean"
+        },
+        {
+          "include": "#nil"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#method"
+        },
+        {
+          "include": "#constant"
+        },
+        {
+          "include": "#rest"
+        },
+        {
+          "include": "#identifier"
+        }
+      ]
+    },
+    "comment": {
+      "name": "comment.line.semicolon.boron",
+      "begin": ";",
+      "end": "$"
+    },
+    "string": {
+      "name": "string.quoted.double.boron",
+      "begin": "\"",
+      "end": "\"",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.boron"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.boron"
+        }
+      },
+      "patterns": [
+        {
+          "name": "constant.character.escape.boron",
+          "match": "\\\\[nrt\"\\\\]"
+        },
+        {
+          "name": "invalid.illegal.escape.boron",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "head": {
+      "name": "meta.call.head.boron",
+      "begin": "\\G",
+      "end": "(?:(def)(?=$|[\\s()\\[\\]{};\"'`~#])[ \\t]+([^\\s()\\[\\]{};\"'`~#:]+)(?=$|[\\s()\\[\\]{};\"'`~#])|((?:def|let|fn|if|do|set!))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:\\.\\[\\]=?|\\.[^\\s()\\[\\]{};\"'`~#]+))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:\\+|-|\\*|/|%|==|=|!=|<=|<|>=|>))(?=$|[\\s()\\[\\]{};\"'`~#])|((?:not|puts|print|get|require|send-with-block|send))(?=$|[\\s()\\[\\]{};\"'`~#])|([^\\s()\\[\\]{};\"'`~#:]+)(?=$|[\\s()\\[\\]{};\"'`~#])|(?=[()\\[\\]{}\"'`~#:]))",
+      "endCaptures": {
+        "1": {
+          "name": "keyword.control.boron"
+        },
+        "2": {
+          "name": "variable.other.definition.boron"
+        },
+        "3": {
+          "name": "keyword.control.boron"
+        },
+        "4": {
+          "name": "entity.name.function.member.boron"
+        },
+        "5": {
+          "name": "keyword.operator.boron"
+        },
+        "6": {
+          "name": "support.function.boron"
+        },
+        "7": {
+          "name": "entity.name.function.boron"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        }
+      ]
+    },
+    "quote": {
+      "name": "punctuation.definition.quote.boron",
+      "match": "~@|['`~]"
+    },
+    "symbol": {
+      "name": "constant.other.symbol.boron",
+      "match": ":[^\\s()\\[\\]{};\"'`~#]+(?=$|[\\s()\\[\\]{};\"'`~#])"
+    },
+    "boolean": {
+      "name": "constant.language.boolean.boron",
+      "match": "(?:true|false)(?=$|[\\s()\\[\\]{};\"'`~#])"
+    },
+    "nil": {
+      "name": "constant.language.nil.boron",
+      "match": "nil(?=$|[\\s()\\[\\]{};\"'`~#])"
+    },
+    "number": {
+      "name": "constant.numeric.boron",
+      "match": "[+-]?(?:\\d+\\.\\d+(?:[eE][+-]?\\d+)?|\\d+[eE][+-]?\\d+|\\d+)(?=$|[\\s()\\[\\]{};\"'`~#])"
+    },
+    "method": {
+      "name": "entity.name.function.member.boron",
+      "match": "(?:\\.\\[\\]=?|\\.[^\\s()\\[\\]{};\"'`~#]+)(?=$|[\\s()\\[\\]{};\"'`~#])"
+    },
+    "constant": {
+      "name": "support.class.boron",
+      "match": "[A-Z]\\w*(?:::[A-Z]\\w*)*(?=$|[\\s()\\[\\]{};\"'`~#])"
+    },
+    "rest": {
+      "name": "keyword.operator.rest.boron",
+      "match": "&(?=$|[\\s()\\[\\]{};\"'`~#])"
+    },
+    "identifier": {
+      "name": "variable.other.boron",
+      "match": "[^\\s()\\[\\]{};\"'`~#]+"
+    },
+    "list": {
+      "name": "meta.list.boron",
+      "begin": "\\(",
+      "end": "\\)",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.parens.begin.boron"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.parens.end.boron"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#head"
+        },
+        {
+          "include": "#forms"
+        }
+      ]
+    },
+    "vector": {
+      "name": "meta.vector.boron",
+      "begin": "\\[",
+      "end": "\\]",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.brackets.begin.boron"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.brackets.end.boron"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#forms"
+        }
+      ]
+    },
+    "map": {
+      "name": "meta.map.boron",
+      "begin": "\\{",
+      "end": "\\}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.braces.begin.boron"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.braces.end.boron"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#forms"
+        }
+      ]
+    },
+    "set": {
+      "name": "meta.set.boron",
+      "begin": "#\\{",
+      "end": "\\}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.set.begin.boron"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.set.end.boron"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#forms"
+        }
+      ]
+    }
+  }
+}

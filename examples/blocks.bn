@@ -1,0 +1,6 @@
+; Blocks are explicit. A Proc in an ordinary method call stays an argument.
+(def doubled
+  (send-with-block [1 2 3] :map []
+    (fn [x] (* x 2))))
+
+(puts (.inspect doubled))

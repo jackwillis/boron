@@ -1,0 +1,38 @@
+{
+  "name": "boron-language",
+  "displayName": "Boron",
+  "description": "Syntax highlighting and editing support for the Boron Lisp.",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "boron",
+        "aliases": [
+          "Boron",
+          "boron"
+        ],
+        "extensions": [
+          ".bn",
+          ".boron"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "boron",
+        "scopeName": "source.boron",
+        "path": "./syntaxes/boron.tmLanguage.json",
+        "unbalancedBracketScopes": [
+          "entity.name.function.member.boron"
+        ]
+      }
+    ]
+  }
+}
