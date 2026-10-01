@@ -99,7 +99,8 @@ Implemented syntax:
 
 Builtins: `+`, `-`, `*`, `/`, `%`, `=`, `==`, `!=`, `<`, `<=`, `>`, `>=`,
 `not`, `puts`, `print`, `get`, `map`, `filter`, `reduce`, `group-by`, `count`,
-`require`, `send`, `send-with-block`, `with-self`.
+`require`, `send`, `send-with-block`, `with-self`, `ivar-get`, `ivar-set!`,
+`ivar-defined?`.
 Operators are ordinary bindings and can be shadowed. Collections are actual Ruby
 Arrays, Hashes, and Sets. Ruby exceptions propagate through the Ruby API.
 
@@ -134,6 +135,18 @@ input reports an error. There is no history/completion or transactional rollback
 Reader and compile errors now have structured diagnostics and source excerpts;
 duplicate bindings identify both declarations. Runtime Ruby exceptions keep their
 native classes, and runtime source maps remain future work.
+
+`ivar-get`, `ivar-set!`, and `ivar-defined?` wrap Ruby instance-variable access
+with an explicit receiver. Names may be symbols or strings, with or without the
+leading `@`; Ruby validates the resulting name. Reading an unset ivar returns
+`nil`, setting returns the assigned value, and `ivar-defined?` distinguishes an
+unset ivar from one explicitly set to `nil`.
+
+```clojure
+(let [object (.new Object)]
+  (ivar-set! object :user "Ada")
+  (ivar-get object :user)) ; "Ada"
+```
 
 `with-self` makes Ruby instance context explicit while retaining lexical captures:
 
@@ -182,6 +195,7 @@ Run a spec file, optionally filtering by a substring of its full nested name:
 ```sh
 bundle exec bin/boron test examples/cart_spec.bn
 bundle exec bin/boron test examples/cart_spec.bn --filter coffee
+bundle exec bin/boron test examples/fixture_spec.bn
 ```
 
 ```clojure
@@ -193,9 +207,29 @@ bundle exec bin/boron test examples/cart_spec.bn --filter coffee
 
 `context` aliases `describe`. Tests (`it`) and hooks (`before`, `after`) take
 `[]` or `[fixture]`. Each test gets a fresh hash shared with its hooks; local
-bindings inside a hook are not visible in the test. `get` reads a collection
+bindings inside a hook are not visible in the test. `self` is reserved as the
+per-test example object, shared by its hooks and body; the optional `[fixture]`
+parameter still receives the separate hash. `get` reads a collection
 entry; `put` mutates it and returns the assigned value. These are Boron runtime
 functions and do not add methods to Ruby classes.
+
+For implicit fixture state, `set-fixture!` and `fixture` use real ivars on `self`:
+
+```clojure
+(describe "user creation"
+  (before [] (set-fixture! :user "Ada"))
+  (it "has a name" []
+    (assert (= (fixture :user) "Ada"))))
+```
+
+`set-fixture!` returns the assigned value. `fixture` raises `KeyError` when unset
+and returns `nil` when explicitly set to `nil`. Core ivar helpers and fixture
+helpers access the same state: `(ivar-get self :user)` reads the value above.
+Each test gets a fresh example object as well as a fresh hash. Nested functions
+capture `self` lexically, so fixture access works inside closures. Fixture helpers
+are macros available only in the runner and require the lexical `self` supplied
+by a test or hook. No global current-example state is used. Test and hook parameter
+vectors remain mandatory; implicit fixture access uses `[]`.
 
 Setup runs from outer groups to inner groups, in registration order. Teardown
 runs from inner groups to outer groups, in reverse registration order. All

@@ -1,0 +1,10 @@
+(describe "user creation"
+  (before []
+    (set-fixture! :user {:name "Ada"}))
+
+  (it "has a name" []
+    (assert (= (get (fixture :user) :name) "Ada")))
+
+  (it "stores fixtures as Ruby instance variables" []
+    (assert (ivar-defined? self :user))
+    (assert (= (ivar-get self :user) (fixture :user)))))

@@ -4,6 +4,20 @@ module Boron
   module Spec
     class Failure < StandardError; end
 
+    class ExampleContext
+      def fixture(name)
+        variable = Runtime.ivar_name(name)
+        unless instance_variable_defined?(variable)
+          raise KeyError, "undefined fixture #{name.inspect}"
+        end
+        instance_variable_get(variable)
+      end
+
+      def set_fixture(name, value)
+        instance_variable_set(Runtime.ivar_name(name), value)
+      end
+    end
+
     Group = Struct.new(:name, :parent, :before, :after)
     Example = Struct.new(:name, :group, :body, :location)
 
@@ -118,23 +132,25 @@ module Boron
         [*groups(test).map(&:name).compact, test.name].join(" > ")
       end
 
-      def invoke(body, fixture)
-        body.arity.zero? ? body.call : body.call(fixture)
+      def invoke(body, fixture, context)
+        arguments = (body.arity == 1) ? [] : [fixture]
+        context.instance_exec(*arguments, &Runtime.with_self(body))
       end
 
       def execute(test)
         fixture = {}
+        context = ExampleContext.new
         problems = []
         chain = groups(test)
         begin
-          chain.each { |group| group.before.each { |hook| invoke(hook, fixture) } }
-          invoke(test.body, fixture)
+          chain.each { |group| group.before.each { |hook| invoke(hook, fixture, context) } }
+          invoke(test.body, fixture, context)
         rescue StandardError, ScriptError => error
           problems << error
         ensure
           chain.reverse_each do |group|
             group.after.reverse_each do |hook|
-              invoke(hook, fixture)
+              invoke(hook, fixture, context)
             rescue StandardError, ScriptError => error
               problems << error
             end

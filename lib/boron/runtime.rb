@@ -77,6 +77,9 @@ module Boron
       env.define("gensym", ->(prefix = "g") { gensym(prefix) })
       env.define("send", ->(receiver, method, *args) { receiver.public_send(method, *args) })
       env.define("send-with-block", ->(receiver, method, args, block) { send_with_block(receiver, method, args, block) })
+      env.define("ivar-get", ->(receiver, name) { receiver.instance_variable_get(ivar_name(name)) })
+      env.define("ivar-set!", ->(receiver, name, value) { receiver.instance_variable_set(ivar_name(name), value) })
+      env.define("ivar-defined?", ->(receiver, name) { receiver.instance_variable_defined?(ivar_name(name)) })
       env.define("with-self", ->(function) { with_self(function) })
       env
     end
@@ -88,6 +91,14 @@ module Boron
 
     def send_with_block(receiver, method, arguments, block)
       receiver.public_send(method, *arguments, &block)
+    end
+
+    def ivar_name(name)
+      unless name.is_a?(String) || name.is_a?(Symbol)
+        raise TypeError, "instance variable name must be a String or Symbol"
+      end
+      text = name.to_s
+      text.start_with?("@") ? text : "@#{text}"
     end
 
     def with_self(function)

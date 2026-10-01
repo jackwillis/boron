@@ -10,13 +10,73 @@ class SpecTest < Minitest::Test
     [runner.run, output.string]
   end
 
+  def test_implicit_fixtures_share_real_ivars_and_keep_explicit_hash
+    status, output = run_spec(<<~BN)
+      (let [name "Ada"]
+        (describe "fixtures"
+          (before [s]
+            (assert (.is_a? s Hash))
+            (put s :legacy 12)
+            (set-fixture! :user name)
+            (ivar-set! self :nullable nil))
+          (after [] (assert (= (fixture :user) "Grace")))
+          (it "mixes APIs" [s]
+            (assert (= (get s :legacy) 12))
+            (assert (= (ivar-get self :user) "Ada"))
+            (assert (ivar-defined? self :nullable))
+            (assert (= (fixture :nullable) nil))
+            (assert (= (set-fixture! :user "Grace") "Grace")))))
+    BN
+    assert_equal 0, status, output
+  end
+
+  def test_implicit_fixtures_are_fresh_and_missing_fixtures_raise
+    status, output = run_spec(<<~BN)
+      (def previous nil)
+      (describe "fresh"
+        (before []
+          (refute (= self previous))
+          (set! previous self)
+          (refute (ivar-defined? self :user)))
+        (it "first" [] (set-fixture! :user 12))
+        (it "second" [] (assert-raises KeyError (fixture :user))))
+    BN
+    assert_equal 0, status, output
+  end
+
+  def test_implicit_fixtures_survive_setup_failure_through_teardown
+    status, output = run_spec(<<~BN)
+      (describe "cleanup"
+        (before []
+          (set-fixture! :resource "open")
+          (.raise Kernel RuntimeError "setup"))
+        (after [] (assert (= (fixture :resource) "open")))
+        (it "unused" [] (assert false)))
+    BN
+    assert_equal 1, status
+    assert_includes output, "1 tests, 1 assertions, 0 failures, 1 errors"
+  end
+
+  def test_fixture_helpers_are_lexical_and_runner_local
+    status, output = run_spec(<<~BN)
+      (it "captures context" []
+        (set-fixture! :user "Ada")
+        (let [read (fn [] (fixture :user))]
+          (assert (= (read) "Ada"))))
+    BN
+    assert_equal 0, status, output
+    ["(fixture :user)", "(set-fixture! :user 1)"].each do |source|
+      assert_raises(Boron::UnboundName) { Boron::Session.new.evaluate(source) }
+    end
+  end
+
   def test_computed_assertion_head
     status, = run_spec('(it "computed" [] (assert ((fn [a b] (.== a b)) 1 1)))')
     assert_equal 0, status
   end
 
   def test_invalid_fixture_parameters
-    ["[a b]", "[& args]", "s"].each do |parameters|
+    ["[a b]", "[& args]", "[self]", "s"].each do |parameters|
       ['it "bad"', "before", "after"].each do |declaration|
         assert_raises(Boron::CompileError) { run_spec("(#{declaration} #{parameters} true)") }
       end

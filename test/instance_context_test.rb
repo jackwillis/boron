@@ -5,6 +5,23 @@ class InstanceContextTest < Minitest::Test
     Boron::Session.new.evaluate(source)
   end
 
+  def test_ivar_helpers_use_real_ruby_instance_variables
+    source = <<~BN
+      (let [receiver (.new Object)]
+        [(ivar-defined? receiver :user)
+         (ivar-get receiver :user)
+         (ivar-set! receiver :user "Ada")
+         (.instance_variable_get receiver :@user)
+         (ivar-defined? receiver "@user")
+         (ivar-get receiver "user")])
+    BN
+    assert_equal [false, nil, "Ada", "Ada", true, "Ada"], evaluate(source)
+    ruby = Boron::Compiler.new.compile(source, standalone: true)
+    assert_equal [false, nil, "Ada", "Ada", true, "Ada"], Kernel.eval(ruby) # standard:disable Security/Eval
+    assert_raises(NameError) { evaluate('(ivar-get (.new Object) "bad-name")') }
+    assert_raises(TypeError) { evaluate("(ivar-get (.new Object) 1)") }
+  end
+
   def test_instance_exec_supplies_explicit_receiver_and_preserves_lexical_capture
     assert_equal 12, evaluate(<<~BN)
       (let [receiver (.new Object) captured 7]

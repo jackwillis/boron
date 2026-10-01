@@ -4,11 +4,11 @@
     (if (<= (count parameters) 1)
       (if (= (count parameters) 1)
         (if (.is_a? (first parameters) Boron::Form::Identifier)
-          (if (= (.name (first parameters)) "&")
-            (.raise Kernel ArgumentError "fixture parameters must be [] or [name]") nil)
-          (.raise Kernel ArgumentError "fixture parameters must be [] or [name]")) nil)
-      (.raise Kernel ArgumentError "fixture parameters must be [] or [name]"))
-    (.raise Kernel ArgumentError "fixture parameters must be [] or [name]")))
+          (if (.include? ["&" "self"] (.name (first parameters)))
+            (.raise Kernel ArgumentError "fixture parameters must be [] or [name]; self is reserved") nil)
+          (.raise Kernel ArgumentError "fixture parameters must be [] or [name]; self is reserved")) nil)
+      (.raise Kernel ArgumentError "fixture parameters must be [] or [name]; self is reserved"))
+    (.raise Kernel ArgumentError "fixture parameters must be [] or [name]; self is reserved")))
 ; Loaded only by the spec runner. Tests and hooks accept [] or [fixture].
 (defmacro describe [name & body]
   `(boron-spec-describe ~name (fn [] ~@body)))
@@ -16,13 +16,13 @@
   `(describe ~name ~@body))
 (defmacro it [name parameters & body]
   (apply spec-parameters [parameters])
-  `(boron-spec-it ~name (fn ~parameters ~@body) ~(macro-location)))
+  `(boron-spec-it ~name (fn [self ~@parameters] ~@body) ~(macro-location)))
 (defmacro before [parameters & body]
   (apply spec-parameters [parameters])
-  `(boron-spec-before (fn ~parameters ~@body)))
+  `(boron-spec-before (fn [self ~@parameters] ~@body)))
 (defmacro after [parameters & body]
   (apply spec-parameters [parameters])
-  `(boron-spec-after (fn ~parameters ~@body)))
+  `(boron-spec-after (fn [self ~@parameters] ~@body)))
 (defmacro assert [expression]
   (if (list? expression)
     (if (= (count expression) 3)
@@ -38,3 +38,9 @@
   `(boron-spec-assert (not ~expression) '(refute ~expression) nil))
 (defmacro assert-raises [exception & body]
   `(boron-spec-raises ~exception (fn [] ~@body)))
+
+; These macros intentionally refer to the lexical self bound by tests and hooks.
+(defmacro fixture [name]
+  `(.fixture self ~name))
+(defmacro set-fixture! [name value]
+  `(.set_fixture self ~name ~value))
