@@ -255,6 +255,11 @@ A friendlier block syntax can later be a macro over this operation.
 | `not` | Ruby truth negation |
 | `puts`, `print` | Ruby console output |
 | `get` | Ruby indexing with collection and key |
+| `map` | `(map f collection)` eagerly transforms each element into an Array |
+| `filter` | `(filter predicate collection)` selects elements using Ruby truth |
+| `reduce` | `(reduce f initial collection)` folds left from an explicit initial value |
+| `group-by` | `(group-by f collection)` creates a Ruby Hash of key → element Arrays |
+| `count` | Counts elements of a Ruby Enumerable |
 | `require` | Ruby library loading |
 | `send` | Explicit public Ruby dispatch |
 | `send-with-block` | Public dispatch with a distinct Ruby block |
@@ -265,6 +270,12 @@ These are callable bindings and can be shadowed. For example:
 (let [+ (fn [a b] 99)]
   (+ 1 2)) ; 99
 ```
+
+Sequence helpers use Ruby's Enumerable operations. Callbacks receive one element
+at a time; Hash elements are `[key value]` pairs. Reduce callbacks receive the
+accumulator and the element. Helpers preserve host equality/order and do not
+mutate the input themselves; callbacks can still mutate host objects. No lazy
+sequence abstraction is introduced.
 
 ## Compilation and errors
 
@@ -277,7 +288,10 @@ include the identifier's location. Ruby runtime exceptions retain their Ruby
 classes. Runtime stack traces still point at generated Ruby lines; source maps
 are future work. There are no Boron try/catch forms yet.
 
-`boron run file.bn` executes a file. `boron compile file.bn` emits Ruby requiring
+`boron run file.bn [-- PROGRAM_ARGS...]` executes a file. Only arguments after
+the separator are exposed to that program as `ARGV`; the Ruby process's own ARGV
+is not mutated. Emitted Ruby uses normal Ruby ARGV.
+`boron compile file.bn` emits Ruby requiring
 the Boron runtime. `compile --emit-ruby` is an equivalent inspection command.
 Programs currently run through `./bin/boron` from the repository.
 

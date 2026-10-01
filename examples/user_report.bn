@@ -1,0 +1,53 @@
+; A real CLI program: read user records, filter, and summarize as JSON.
+(require "json")
+
+(def usage "Usage: boron run examples/user_report.bn -- USERS.json")
+(if (= ARGV ["--help"])
+  (do (puts usage) (.exit Kernel 0)))
+(if (!= (count ARGV) 1)
+  (.abort Kernel usage))
+
+(def users (.parse JSON (.read File (get ARGV 0))))
+
+(def string-or-nil?
+  (fn [value]
+    (if (= value nil) true (.is_a? value String))))
+
+(def valid-user?
+  (fn [user]
+    (if (.is_a? user Hash)
+      (if (string-or-nil? (get user "name"))
+        (string-or-nil? (get user "role"))
+        false)
+      false)))
+
+(if (not (.is_a? users Array))
+  (.abort Kernel "Expected a JSON array of objects"))
+(if (not (send-with-block users :all? [] valid-user?))
+  (.abort Kernel "Expected a JSON array of objects with optional string name/role fields"))
+
+(def active-users
+  (filter (fn [user] (= (get user "active") true)) users))
+
+(def users-by-role
+  (group-by
+    (fn [user]
+      (let [role (get user "role")]
+        (if role role "unknown")))
+    active-users))
+
+(def summary
+  {:total (count users)
+   :active (count active-users)
+   :names (map
+            (fn [user]
+              (let [name (get user "name")]
+                (if name name "unnamed")))
+            active-users)
+   :by-role (.to_h
+              (map
+                (fn [entry]
+                  [(get entry 0) (count (get entry 1))])
+                users-by-role))})
+
+(puts (.pretty_generate JSON summary))

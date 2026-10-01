@@ -39,6 +39,12 @@ emitted Ruby runs with `ruby -Ilib`. Minitest is not needed for those programs.
 
 ## Next slice: macro design before implementation
 
+The first useful program is complete: `examples/user_report.bn` reads a JSON
+file, filters active users, and summarizes names and role counts. Its five sequence
+helpers (`map`, `filter`, `reduce`, `group-by`, `count`) work with Ruby Enumerable.
+CLI program arguments are routed explicitly after `--`. Integration tests cover
+the report's results, failures, and compiled execution. REPL and macros remain next.
+
 Decide a quotation/data API first. Macro inputs and outputs must be forms, while
 syntax objects retain source context. Do not confuse runtime Arrays with code
 lists or discard source spans accidentally.

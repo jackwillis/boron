@@ -56,6 +56,11 @@ module Boron
       env.define("print", ->(*values) { Kernel.print(*values) })
       env.define("require", ->(path) { Kernel.require(path) })
       env.define("get", ->(collection, key) { collection[key] })
+      env.define("map", ->(function, collection) { collection.map { |value| function.call(value) } })
+      env.define("filter", ->(predicate, collection) { collection.select { |value| predicate.call(value) } })
+      env.define("reduce", ->(function, initial, collection) { collection.reduce(initial) { |result, value| function.call(result, value) } })
+      env.define("group-by", ->(function, collection) { collection.group_by { |value| function.call(value) } })
+      env.define("count", ->(collection) { collection.count })
       env.define("send", ->(receiver, method, *args) { receiver.public_send(method, *args) })
       env.define("send-with-block", ->(receiver, method, args, block) { receiver.public_send(method, *args, &block) })
       env

@@ -2,7 +2,7 @@ module Boron
   class CLI
     USAGE = <<~TEXT.freeze
       Usage:
-        boron run FILE.bn
+        boron run FILE.bn [-- PROGRAM_ARGS...]
         boron compile [--emit-ruby] FILE.bn
         boron --help
     TEXT
@@ -15,14 +15,17 @@ module Boron
       end
       command = args.shift
       args.shift if command == "compile" && args.first == "--emit-ruby"
-      unless ["run", "compile"].include?(command) && args.length == 1
+      valid_arguments = args.length == 1 || (command == "run" && args.length >= 2 && args[1] == "--")
+      unless ["run", "compile"].include?(command) && valid_arguments
         err.print USAGE
         return 2
       end
       path = args.first
       source = File.read(path, encoding: "UTF-8")
       if command == "run"
-        Session.new.evaluate(source, filename: path)
+        session = Session.new
+        session.environment.define("ARGV", args.drop(2))
+        session.evaluate(source, filename: path)
       else
         out.print Compiler.new.compile(source, filename: path, standalone: true)
       end

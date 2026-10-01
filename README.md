@@ -16,6 +16,7 @@ are required for Boron itself. Required host libraries still need to be installe
 ./bin/boron run examples/make_adder.bn
 ./bin/boron run examples/json.bn
 ./bin/boron run examples/blocks.bn
+./bin/boron run examples/user_report.bn -- examples/users.json
 ./bin/boron compile --emit-ruby examples/make_adder.bn
 ```
 
@@ -26,6 +27,15 @@ to stdout without executing the program. Emitted Ruby requires Boron's runtime:
 ./bin/boron compile examples/make_adder.bn > /tmp/make_adder.rb
 ruby -Ilib /tmp/make_adder.rb
 ```
+
+Pass program arguments after `--`; the program sees only those arguments in
+`ARGV`. Compiled Ruby receives normal Ruby command-line arguments.
+
+The user report reads a JSON array of records, selects records with `active: true`,
+and prints total/active counts, active names, and counts by role. Optional `name`
+and `role` fields must be strings or null; missing values use `unnamed` and
+`unknown`. Use `--help` as a program argument for usage. All processing code is
+written in Boron, using Ruby's actual JSON and File APIs.
 
 ## Build a gem
 
@@ -84,7 +94,8 @@ Implemented syntax:
 - Explicit `.method` sends, including `.[]`, and uppercase Ruby constant paths.
 
 Builtins: `+`, `-`, `*`, `/`, `%`, `=`, `==`, `!=`, `<`, `<=`, `>`, `>=`,
-`not`, `puts`, `print`, `get`, `require`, `send`, `send-with-block`.
+`not`, `puts`, `print`, `get`, `map`, `filter`, `reduce`, `group-by`, `count`,
+`require`, `send`, `send-with-block`.
 Operators are ordinary bindings and can be shadowed. Collections are actual Ruby
 Arrays, Hashes, and Sets. Ruby exceptions propagate through the Ruby API.
 
