@@ -5,7 +5,7 @@ module Boron
     def emit(node)
       case node
       when IR::Literal
-        node.value.is_a?(String) ? "#{node.value.dump}.dup" : node.value.inspect
+        node.value.is_a?(String) ? node.value.dump : node.value.inspect
       when IR::Local
         node.name
       when IR::Assign
@@ -20,7 +20,13 @@ module Boron
         expressions = node.expressions.map { |expression| emit(expression) }
         expressions.empty? ? "nil" : "(begin\n#{indent(expressions.join("\n"))}\nend)"
       when IR::Conditional
-        "(if #{emit(node.condition)}\n#{indent(emit(node.consequent))}\nelse\n#{indent(emit(node.alternative))}\nend)"
+        # Every literal String is truthy; Ruby warns if emitted directly here.
+        condition = if node.condition.is_a?(IR::Literal) && node.condition.value.is_a?(String)
+          "true"
+        else
+          emit(node.condition)
+        end
+        "(if #{condition}\n#{indent(emit(node.consequent))}\nelse\n#{indent(emit(node.alternative))}\nend)"
       when IR::Lambda
         parameters = node.parameters.dup
         parameters << "*#{node.rest}" if node.rest

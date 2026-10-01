@@ -20,8 +20,9 @@ class CompilerTest < Minitest::Test
     assert_equal({"ab" => 3, :name => "Ada"}, evaluate('{(+ "a" "b") (+ 1 2) :name "Ada"}'))
     assert_equal ::Set[1, 2], evaluate("\#{1 1 (+ 1 1)}")
     first = evaluate('["a"]')
-    first[0] << "b"
-    assert_equal ["ab"], first
+    assert_raises(FrozenError) { first[0] << "b" }
+    first << "b"
+    assert_equal ["a", "b"], first
     assert_equal ["a"], evaluate('["a"]')
   end
 
