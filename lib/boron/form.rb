@@ -4,18 +4,42 @@ module Boron
     :start_line, :start_column, :end_line, :end_column
   )
 
-  Syntax = Data.define(:datum, :span)
+  MacroOrigin = Data.define(:name, :call_span)
+
+  Syntax = Data.define(:datum, :span, :origin) do
+    def initialize(datum:, span:, origin: nil)
+      super
+    end
+  end
 
   module Form
     Identifier = Data.define(:name) do
       def initialize(name:)
         super(name: name.dup.freeze)
       end
+
+      def binding_key
+        name
+      end
+    end
+
+    GeneratedIdentifier = Class.new(Identifier) do
+      def binding_key
+        self
+      end
     end
 
     Collection = Data.define(:items) do
+      include Enumerable
+
       def initialize(items:)
         super(items: items.dup.freeze)
+      end
+
+      def each(&block)
+        return enum_for(:each) unless block
+        items.each(&block)
+        self
       end
     end
 

@@ -1,0 +1,9 @@
+; These are ordinary Boron macros, loaded into each compile-time environment.
+(defmacro defn [name parameters & body]
+  `(def ~name (fn ~parameters ~@body)))
+
+(defmacro when [condition & body]
+  `(if ~condition (do ~@body) nil))
+
+(defmacro unless [condition & body]
+  `(if ~condition nil (do ~@body)))

@@ -9,6 +9,8 @@ module Boron
   end
 
   class Lower
+    include Quotation
+
     IR = RubyIR
 
     def initialize
@@ -26,7 +28,7 @@ module Boron
       env = IR::Local.new(environment)
       case value
       when Form::Identifier
-        call(env, :get, literal(value.name), literal(location(form)))
+        call(env, :get, binding_literal(value.binding_key), literal(location(form)))
       when Form::Vector
         IR::ArrayLiteral.new(value.items.map { |item| lower(item, environment) })
       when Form::Map
@@ -47,6 +49,14 @@ module Boron
       name = head.datum.is_a?(Form::Identifier) ? head.datum.name : nil
       env = IR::Local.new(environment)
       case name
+      when "quote"
+        arity(args, 1..1, form)
+        lower_quote(args.first)
+      when "quasiquote"
+        arity(args, 1..1, form)
+        lower_quasiquote(args.first, environment)
+      when "unquote", "unquote-splicing"
+        error("#{name} outside quasiquote", form)
       when "do"
         lower_all(args, environment: environment)
       when "if"
@@ -54,10 +64,10 @@ module Boron
         IR::Conditional.new(lower(args[0], environment), lower(args[1], environment), args[2] ? lower(args[2], environment) : literal(nil))
       when "def"
         arity(args, 2..2, form)
-        call(call(env, :root), :define, literal(identifier(args[0])), lower(args[1], environment))
+        call(call(env, :root), :define, binding_literal(identifier(args[0])), lower(args[1], environment))
       when "set!"
         arity(args, 2..2, form)
-        call(env, :set, literal(identifier(args[0])), lower(args[1], environment), literal(location(args[0])))
+        call(env, :set, binding_literal(identifier(args[0])), lower(args[1], environment), literal(location(args[0])))
       when "let"
         lower_let(args, form, environment)
       when "fn"
@@ -84,7 +94,7 @@ module Boron
       body = lower_all(args.drop(1), environment: frames.empty? ? parent : frames.last[0])
       frames.each_with_index.to_a.reverse_each do |(environment, name, value), index|
         outer = index.zero? ? parent : frames[index - 1][0]
-        definition = call(IR::Local.new(environment), :define, literal(identifier(name)), lower(value, outer))
+        definition = call(IR::Local.new(environment), :define, binding_literal(identifier(name)), lower(value, outer))
         body = call(IR::Lambda.new([environment], nil, IR::Sequence.new([definition, body])), :call, call(IR::Local.new(outer), :child))
       end
       body
@@ -110,7 +120,7 @@ module Boron
       environment = fresh("env")
       expressions = [IR::Assign.new(environment, call(IR::Local.new(parent), :child))]
       all_names.zip(ruby_parameters + [ruby_rest].compact).each do |name, ruby_name|
-        expressions << call(IR::Local.new(environment), :define, literal(name), IR::Local.new(ruby_name))
+        expressions << call(IR::Local.new(environment), :define, binding_literal(name), IR::Local.new(ruby_name))
       end
       expressions << lower_all(args.drop(1), environment: environment)
       IR::Lambda.new(ruby_parameters, ruby_rest, IR::Sequence.new(expressions))
@@ -120,7 +130,11 @@ module Boron
       error("expected a binding identifier", form) unless form.datum.is_a?(Form::Identifier)
       name = form.datum.name
       error("invalid binding identifier #{name}", form) if name == "&" || name.start_with?(".") || name.include?("::")
-      name
+      form.datum.binding_key
+    end
+
+    def binding_literal(key)
+      key.is_a?(Form::GeneratedIdentifier) ? call(IR::Local.new("::Boron::Form::GeneratedIdentifier"), :new, literal(key.name)) : literal(key)
     end
 
     def vector(form)

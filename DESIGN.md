@@ -2,8 +2,8 @@
 
 ## Architecture
 
-Current pipeline: reader → semantic lowering → Ruby IR → Ruby emitter → Ruby
-execution. Expansion will go between the reader and lowering when macros land.
+Current pipeline: reader → macro expansion → semantic lowering → Ruby IR → Ruby emitter → Ruby
+execution. Macros run through the same compiler backend in a separate environment.
 There is no separate evaluator interpreting Boron forms.
 
 Ruby provides the values: Integer, Float, String, Symbol, Array, Hash, Set,
@@ -28,13 +28,14 @@ Whitespace separates atoms; `;` comments continue to LF or EOF. Lists, vectors,
 maps, and sets use their proposed delimiters. Maps require an even number of
 forms. Any form can be a map key. Strings support newline, carriage return, tab,
 quote, and backslash escapes. Unknown escapes are errors; interpolation is not
-implemented. Quotation prefixes still produce explicit unsupported-syntax errors.
+implemented. Quotation prefixes desugar into quote, quasiquote, unquote, and
+unquote-splicing forms with the actual prefix span.
 
 Integer tokens accept optional signs and decimal digits. Float tokens accept a
 fraction and/or exponent, with digits on both sides of any decimal point.
 Non-finite float literals are rejected. Numeric-looking spellings outside these
 rules are identifiers for now. `true`, `false`, `nil` are literal tokens.
-Symbol literals use `:name`; quoted-symbol syntax is not supported.
+Symbol literals use `:name`; quoted identifiers remain Form::Identifier values.
 `Foo::Bar` remains an identifier in the reader. `.[]` and `.[]=` are recognized
 as method identifiers despite containing collection delimiters.
 
@@ -54,8 +55,7 @@ division. `+` and `*` accept zero arguments (0 and 1), `-` accepts unary negatio
 `/` requires at least two arguments, comparisons require at least two operands.
 
 Core special forms are recognized by their spelling in list-head position.
-They take precedence over callable bindings there; no core-name shadowing policy
-has been finalized. Function values have strict Ruby lambda arity. Rest arguments
+They take precedence over callable bindings there and cannot be replaced by macros. Function values have strict Ruby lambda arity. Rest arguments
 use `[x & xs]`, where `xs` is a Ruby Array. No implicit return or loop primitives.
 
 `def` writes a single session's root environment, including when used inside a
@@ -143,3 +143,31 @@ For each language slice: add focused failing Minitests, implement, then simplify
 without changing behavior. Prefer observable semantics and errors over tests tied
 to private helpers. Integration tests exercise execution and host behavior.
 Keep the roadmap honest about partial milestones and deferred syntax.
+
+## Macro boundary and review notes
+
+The external design review reinforced three constraints: keep the typed IR
+boundary, distinguish code datums from host collections, and preserve honest
+source locations. These are implemented rather than treating the review's
+proposed syntax as an additional specification.
+
+Macros receive raw immutable Form datums, not Syntax objects or runtime Arrays.
+SyntaxData bridges that boundary. Quoted vectors/maps/sets stay Form values;
+unquoted collection expressions allocate Ruby collections. Returning a runtime
+Array from a macro is an error. Reused structural argument objects retain their
+input spans; generated nodes use the actual call span and MacroOrigin metadata.
+Literal values cannot preserve individual input provenance through object identity.
+
+Top-level defmacro definitions are processed in source order, in a separate
+compile-time environment. Runtime def bindings are unavailable there. Sessions
+retain their macro registry; independent sessions do not share definitions.
+Expansion recursively resolves macro calls before lowering, with a depth limit
+of 100 nested calls. This does not bound execution time inside a macro body.
+Macros can use Ruby interop and must be treated as executable source.
+
+Gensym produces a distinct GeneratedIdentifier binding key, not merely a unique
+string. It avoids collision with ordinary identifiers of the same spelling.
+Macros are not automatically hygienic; authors must use gensym for introduced
+bindings. Core defn/when/unless live in lib/boron/core.bn and ship with the gem.
+Macroexpand is compile-time syntax accepting exactly one quoted form; it returns
+the recursively expanded datum without running the resulting program.

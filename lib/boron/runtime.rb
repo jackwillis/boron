@@ -1,3 +1,5 @@
+require "set" unless defined?(::Set) # standard:disable Lint/RedundantRequireStatement
+
 module Boron
   class UnboundName < StandardError; end
 
@@ -24,7 +26,7 @@ module Boron
     def get(name, location)
       return @bindings[name] if @bindings.key?(name)
       return parent.get(name, location) if parent
-      if /\A[A-Z]\w*(?:::[A-Z]\w*)*\z/.match?(name)
+      if name.is_a?(String) && /\A[A-Z]\w*(?:::[A-Z]\w*)*\z/.match?(name)
         return name.split("::").reduce(Object) { |scope, part| scope.const_get(part, false) }
       end
       raise UnboundName, "#{location}: unbound identifier #{name}"
@@ -61,9 +63,29 @@ module Boron
       env.define("reduce", ->(function, initial, collection) { collection.reduce(initial) { |result, value| function.call(result, value) } })
       env.define("group-by", ->(function, collection) { collection.group_by { |value| function.call(value) } })
       env.define("count", ->(collection) { collection.count })
+      env.define("list", ->(*values) { Form::List.new(values) })
+      env.define("vector", ->(*values) { Form::Vector.new(values) })
+      env.define("list?", ->(value) { value.is_a?(Form::List) })
+      env.define("first", ->(values) { values.first })
+      env.define("rest", ->(values) { values.drop(1) })
+      env.define("cons", ->(value, values) { Form::List.new([value, *values.to_a]) })
+      env.define("concat", ->(*collections) { collections.flat_map(&:to_a) })
+      env.define("apply", ->(function, values) { function.call(*values.to_a) })
+      env.define("gensym", ->(prefix = "g") { gensym(prefix) })
       env.define("send", ->(receiver, method, *args) { receiver.public_send(method, *args) })
       env.define("send-with-block", ->(receiver, method, args, block) { receiver.public_send(method, *args, &block) })
       env
+    end
+
+    def gensym(prefix)
+      @gensym_counter = (@gensym_counter || 0) + 1
+      Form::GeneratedIdentifier.new("#{prefix}__#{@gensym_counter}")
+    end
+
+    def splice(value)
+      return value.items if value.is_a?(Form::List) || value.is_a?(Form::Vector)
+      return value if value.is_a?(Array)
+      raise TypeError, "unquote-splicing requires a list, vector, or Array"
     end
   end
 end

@@ -47,8 +47,19 @@ module Boron
         error("empty symbol literal", start) if name.empty?
         Syntax.new(name.to_sym, span_from(start))
       when "'", "`", "~"
+        prefix = current
         advance
-        error("unsupported reader syntax", start)
+        name = {"'" => "quote", "`" => "quasiquote", "~" => "unquote"}.fetch(prefix)
+        if prefix == "~" && current == "@"
+          name = "unquote-splicing"
+          advance
+        end
+        prefix_span = span_from(start)
+        skip_trivia
+        error("missing form after #{name}", start) if eof?
+        argument = read_form
+        head = Syntax.new(Form::Identifier.new(name), prefix_span)
+        Syntax.new(Form::List.new([head, argument]), span_from(start))
       else
         read_atom(start)
       end

@@ -11,7 +11,7 @@ in small, test-driven slices. Future syntax examples are not implemented promise
 | P0.4 | CLI | Run `.bn` files, emit runnable Ruby, useful error status | Complete |
 | P1 | Lexical language | Definitions, sequential let, functions, calls, conditionals, closures, recursion | Complete |
 | P2 | Initial Ruby interop | Explicit sends, constants, require, real JSON library | Complete for this slice |
-| P3 | Macros | Quote, quasiquote, expansion, defmacro, macroexpand, gensym | Next |
+| P3 | Macros | Quote, quasiquote, expansion, defmacro, macroexpand, gensym | Complete for this slice |
 | P4 | Ruby blocks | Explicit block passing with Enumerable and File.open | Primitive complete; surface syntax deferred |
 | P5 | Classes | Real Class values, methods, state; macro sugar follows primitives | Planned |
 | P6–P7 | Usability and ecosystem | REPL, core macros/sequence helpers, real gem examples | Planned |
@@ -37,15 +37,16 @@ Validation on September 30, 2026: Ruby 4.0.7, Minitest 5.27.0; 35 tests and
 193 assertions pass. The examples run through the executable, and the compiler's
 emitted Ruby runs with `ruby -Ilib`. Minitest is not needed for those programs.
 
-## Next slice: macro design before implementation
+## Completed macro slice
 
 The first useful program is complete: `examples/user_report.bn` reads a JSON
 file, filters active users, and summarizes names and role counts. Its five sequence
 helpers (`map`, `filter`, `reduce`, `group-by`, `count`) work with Ruby Enumerable.
 CLI program arguments are routed explicitly after `--`. Integration tests cover
-the report's results, failures, and compiled execution. REPL and macros remain next.
+the report's results, failures, and compiled execution. Quotation and macros are
+now implemented; a real gem example and REPL follow.
 
-Decide a quotation/data API first. Macro inputs and outputs must be forms, while
+The quotation/data API is implemented. Macro inputs and outputs must be forms, while
 syntax objects retain source context. Do not confuse runtime Arrays with code
 lists or discard source spans accidentally.
 

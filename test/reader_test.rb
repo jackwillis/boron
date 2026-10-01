@@ -70,10 +70,12 @@ class ReaderTest < Minitest::Test
     assert_match(/test\.bn:2:2: unclosed list/, error.message)
   end
 
-  def test_later_reader_features_fail_explicitly
-    ["'a", "`a", "~a"].each do |source|
-      error = assert_raises(Boron::ReadError, source) { read(source) }
-      assert_match(/unsupported reader syntax/, error.message)
+  def test_quotation_prefixes_desugar_with_source_spans
+    {"'" => "quote", "`" => "quasiquote", "~" => "unquote", "~@" => "unquote-splicing"}.each do |prefix, name|
+      form = read("#{prefix}a").first
+      assert_equal [[:identifier, name], [:identifier, "a"]], datum(form)
+      assert_equal [1, 1], [form.span.start_line, form.span.start_column]
+      assert_raises(Boron::ReadError) { read(prefix) }
     end
   end
 

@@ -297,19 +297,33 @@ Programs currently run through `./bin/boron` from the repository.
 
 ## Where this language is heading
 
-Macros are the next language milestone. They should receive forms, return forms,
-and expand before Ruby lowering. Quote, quasiquote, unquote, splice, gensym,
-`defmacro`, and inspectable expansion belong together in that design pass.
-
-The intended future feel includes:
+Quotation and macros are implemented. `'x` is shorthand for `(quote x)`;
+backtick constructs a quasiquoted form, `~x` inserts an evaluated value, and
+`~@xs` splices a Form list/vector or Ruby Array into a surrounding collection.
+Quoted identifiers are distinct from Ruby Symbols. Quoted lists, vectors, maps,
+and sets are immutable Form datums rather than ordinary Ruby collections.
 
 ```clojure
-; Planned syntax, not implemented today.
-(defmacro when [condition & body]
-  `(if ~condition
-     (do ~@body)
-     nil))
+(defmacro twice [expression]
+  `(+ ~expression ~expression))
+(defn square [x] (* x x))
+(when true (puts (square (twice 3))))
+(macroexpand '(when true (puts "hello")))
 ```
+
+`defmacro` is top-level syntax with the same strict/rest parameter rules as fn.
+Definitions take effect in source order and persist in a Session. Macro bodies
+run in an isolated compile-time environment, so runtime def bindings are not
+available. Macro arguments are unevaluated Form datums; macro results must be
+form datums, not runtime Arrays/Hashes. `list`, `vector`, `first`, `rest`, `cons`,
+`concat`, `apply`, and `list?` support form manipulation. `rest` and `concat`
+return Arrays; use list/vector to construct code.
+
+`defn`, `when`, and `unless` are ordinary bundled macros. Use `(gensym)` or
+`(gensym "prefix")` for introduced bindings to avoid accidental capture.
+Macros are not automatically hygienic. `(macroexpand 'form)` returns a fully
+expanded form datum without executing it. Expansion failures report the call
+site; reused structural arguments retain their own source locations.
 
 Later, class syntax should construct real Ruby classes through a small primitive
 API, with macros providing the convenient surface. Sequence helpers, threading
