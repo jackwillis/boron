@@ -53,6 +53,7 @@ async function main() {
   has('(& left right)', '&', 'entity.name.function.boron');
   lacks('(& left right)', '&', 'keyword.operator.boron');
   has('(list? value)', 'list?', 'support.function.boron');
+  has('(with-self (fn [self] self))', 'with-self', 'support.function.boron');
   has('(def square 1)', 'square', 'variable.other.definition.boron');
   has('(let [if 1] if)', 'if', 'variable.other.boron');
   has('(definitely 1)', 'definitely', 'entity.name.function.boron');

@@ -1,5 +1,8 @@
 # Boron
 
+> Original proposal, preserved as design history. For implemented behavior, see
+> LANGUAGE.md; for current status and handoff, see ROADMAP.md and HANDOFF.md.
+
 **Boron is a Lisp hosted on Ruby.**
 
 It uses Ruby as its runtime substrate while providing a genuinely Lisp-oriented language: S-expression syntax, lexical functions, macros, explicit message sending, functional composition, and a programmable language surface.

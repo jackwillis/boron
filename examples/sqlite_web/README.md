@@ -18,10 +18,12 @@ The server binds to `127.0.0.1:4567`. In another terminal:
 ```sh
 curl http://127.0.0.1:4567/health
 curl http://127.0.0.1:4567/users
+curl http://127.0.0.1:4567/users/1
 ```
 
 `/health` returns `{"status":"ok","users":2}` on the initial database.
-`/users` returns Ada and Grace with database IDs. The first start creates the
+`/users` returns Ada and Grace with database IDs. `/users/:id` returns one user
+or a JSON 404 for a missing or invalid ID (including numeric prefixes with junk). The first start creates the
 users table and seeds two rows; subsequent starts preserve existing rows.
 Stop with Ctrl+C. Set `BORON_DATABASE=/path/to/demo.sqlite3` to choose the database;
 the default is `boron-demo.sqlite3` in the working directory. Loading without
@@ -34,8 +36,8 @@ BUNDLE_PATH=vendor/bundle bundle exec ruby app_test.rb
 ```
 
 Tests use temporary file databases, verify JSON/404 responses, observe database
-changes, preserve rows through reloading, and execute emitted Ruby in a fresh
-process. The core lint/test commands remain the ones in the repository README.
+changes, preserve rows through reloading, check individual-user requests, and
+execute emitted Ruby routes in a fresh process. The core lint/test commands remain the ones in the repository README.
 
 ## Named classes and explicit routes
 
@@ -50,9 +52,11 @@ JSON generation and queries are the real Ruby gems, not Boron implementations.
 The app also uses the bundled `defn`, `when`, and `unless` convenience macros.
 The same interop is possible through Class.new, const_set, def/fn/if, and explicit
 block sends; macros make the declarations more readable. Declarations currently
-have no bodies. This example has read-only routes; request parameters, Ruby
-instance context, explicit keywords, methods, and class bodies are later design
-work. The table setup is a small single-process demo bootstrap, not a migration
+have no bodies. The individual-user route uses with-self to receive Sinatra's
+request instance explicitly, then reads `.params`. Its rest parameter accepts
+Sinatra's positional captures. ID lookup uses ActiveRecord find_by with a Hash;
+only positive decimal strings are accepted. Routes remain read-only. Keyword
+forwarding and class-body/method syntax are later design work. The table setup is a small single-process demo bootstrap, not a migration
 system.
 
 Checked October 1, 2026 against ActiveRecord 8.1.4, Sinatra 4.2.1, sqlite3 2.9.6,

@@ -101,8 +101,8 @@ Evaluation order follows Ruby's receiver/argument and array/hash element order.
 Ordinary method sends do not reinterpret Proc arguments as blocks. Tests exercise
 Array#map and File.open, including host-managed file closure.
 
-Ruby exceptions retain their host classes. The CLI catches failures, prints a
-concise diagnostic, and exits with status 1. Invalid CLI usage returns 2. Runtime
+Ruby exceptions retain their host classes. The CLI catches failures, renders source excerpts for reader/compile errors and concise
+runtime messages, and exits with status 1. Invalid CLI usage returns 2. Runtime
 backtrace lines are generated Ruby positions; source maps are not implemented.
 Boron binding errors include the original identifier location.
 
@@ -134,8 +134,8 @@ These are fit assessments, not benchmarks or Ruby 4 compatibility claims. Boron'
 reader has no parsing dependency. StandardRB brings parser tooling transitively
 for linting; that tooling is not used by the language implementation. Development
 uses Minitest 5 and [StandardRB](https://github.com/standardrb/standard), locked with
-Bundler. No test plugins or mocks. Formatting targets Ruby 3.2 syntax, matching
-the implementation's use of Data. Lint exceptions are scoped to deliberate
+Bundler. No test plugins or mocks. Formatting retains a Ruby 3.2 syntax target in .standard.yml; the supported gem
+minimum is now Ruby 3.3. Data is used for immutable structural values. Lint exceptions are scoped to deliberate
 generated-Ruby execution and interpolation-literal tests.
 
 ## Editor support
@@ -198,3 +198,49 @@ The accepted surface is `(defmodule Name)`, `(defclass Name)`, and
 `(defclass Name < Superclass)`. Bodies, methods, implicit self, and automatic
 namespace creation are not part of this slice. Keep ordinary def semantics
 unchanged, and retain explicit Ruby interop as the escape hatch.
+
+## Diagnostics and interactive execution
+
+Diagnostic/Label values separate source error data from rendering. Reader and
+CompileError inherit DiagnosticError and preserve existing message/class APIs.
+Duplicate bindings emit two labels; macro failures have an expansion phase.
+SourceRegistry snapshots text before reading/lowering; Compiler and Session
+expose it. CLI and REPL use DiagnosticRenderer. Runtime exception wrapping and
+source-aware runtime IR are deliberately deferred. See DIAGNOSTICS.md.
+
+IncompleteInput subclasses ReadError so existing callers still catch ReadError,
+while the REPL can distinguish unfinished input from malformed syntax without
+matching message text. The REPL pre-reads the whole buffer before evaluation;
+it never evaluates a syntactically unfinished submission. One Session preserves
+both environments. Submission filenames are unique, and errors do not end the
+loop. This is a minimal stream-based REPL with tty prompts, not a Readline UI.
+Printer provides bounded form/collection display and handles cyclic host values.
+
+## Explicit host self
+
+Runtime.with_self constructs a Ruby Proc around a Boron callable. Ruby hosts
+that rebind a block's self (including define_method and Sinatra) set its execution
+context; the wrapper passes that actual self as the function's first argument.
+The remaining positional arguments are forwarded. The original function retains
+its lexical environment and strict arity; no compiler magic or dynamic Boron
+binding is introduced. Ordinary blocks do not acquire a receiver automatically.
+This is enough for instance methods through Ruby interop and request access,
+without deciding class-body syntax, implicit self, or keyword forwarding.
+
+Implementation names remain Ruby snake_case; Boron bindings use kebab-case.
+Exact host method names are preserved; no hyphen/underscore conversion occurs.
+Discuss additional syntax before implementing it, following the user's preference.
+
+## Boron-first tooling direction (planned)
+
+The user requested a native testing library, project organization/startup, Bundler
+integration, and possibly a Rake replacement DSL. Design a thin Boron layer first:
+test forms/assertions backed by optional Minitest; starter files using a normal
+Gemfile; explicit bundle selection via Bundler; tasks backed by Rake until a
+replacement has a demonstrated need. Do not turn these into unconditional Boron
+runtime dependencies or duplicate RubyGems resolution.
+
+Open decisions: project discovery/layout, test session and host-global isolation,
+fixtures, failure/source reporting, executable/library packaging, bundle commands,
+and task context/dependency semantics. Discuss public syntax before implementation.
+The current CLI still provides only run, compile, repl, and help.

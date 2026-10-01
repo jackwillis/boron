@@ -48,7 +48,8 @@ The same `&` token introduces rest parameters or the final block in a method sen
 At an ordinary call head, `(& left right)` receives the ordinary function scope;
 it can call a user-defined binding, but Boron supplies no builtin `&` yet. The
 proposed `do` block marker, send& alias, and .method& shorthand are not language
-features. `(do ...)` keeps its sequence-form meaning.
+features. `(do ...)` keeps its sequence-form meaning. `with-self` is highlighted
+as a builtin; self remains an ordinary identifier, not a reserved keyword.
 
 TextMate is lexical highlighting. It cannot determine whether a name is bound,
 whether `+` has been shadowed, or whether an uppercase name denotes a Boron binding

@@ -96,7 +96,7 @@ Implemented syntax:
 
 Builtins: `+`, `-`, `*`, `/`, `%`, `=`, `==`, `!=`, `<`, `<=`, `>`, `>=`,
 `not`, `puts`, `print`, `get`, `map`, `filter`, `reduce`, `group-by`, `count`,
-`require`, `send`, `send-with-block`.
+`require`, `send`, `send-with-block`, `with-self`.
 Operators are ordinary bindings and can be shadowed. Collections are actual Ruby
 Arrays, Hashes, and Sets. Ruby exceptions propagate through the Ruby API.
 
@@ -108,9 +108,35 @@ In ordinary calls, `&` can name a user-defined callable; it has no builtin bindi
 
 Quotation, quasiquotation, defmacro, macroexpand, gensym, and the core macros
 `defn`, `when`, and `unless` are implemented. Named `defclass` and `defmodule`
-declarations are implemented. Class bodies/methods, keyword/splat arguments,
-destructuring, and a REPL remain future work. Runtime backtraces
+declarations are implemented. The multiline REPL and first structured diagnostic
+slice are available. Class-body/method syntax, keyword/splat arguments, and
+destructuring remain future work. Runtime backtraces
 currently refer to generated Ruby lines; source map work remains ahead.
+
+## Interactive use and diagnostics
+
+```sh
+./bin/boron repl
+```
+
+The REPL retains definitions and macros, accepts multiline forms, and recovers
+after ordinary errors. Use `:help`, `:quit`, or `:exit`. Prompts appear for terminal
+input; piped input prints completed results without prompts. EOF with unfinished
+input reports an error. There is no history/completion or transactional rollback.
+
+Reader and compile errors now have structured diagnostics and source excerpts;
+duplicate bindings identify both declarations. Runtime Ruby exceptions keep their
+native classes, and runtime source maps remain future work.
+
+`with-self` makes Ruby instance context explicit while retaining lexical captures:
+
+```clojure
+(.instance_exec "Ada" & (with-self (fn [self] (.upcase self)))) ; "ADA"
+```
+
+The SQLite example uses this bridge to read Sinatra request params and serve
+`/users/:id`, with JSON 404 responses for missing or malformed IDs. See its README
+for the separate bundle and local server commands.
 
 ## Documentation
 
@@ -119,7 +145,8 @@ currently refer to generated Ruby lines; source map work remains ahead.
 - [ROADMAP.md](ROADMAP.md): milestones, limitations, and planned work.
 - [SPEC.md](SPEC.md): original proposal, including aspirational syntax that is not implemented.
 - [TESTING.md](TESTING.md): test audit, optional integration checks, and coverage limits.
-- [DIAGNOSTICS.md](DIAGNOSTICS.md): diagnostic design and acceptance criteria.
+- [DIAGNOSTICS.md](DIAGNOSTICS.md): implemented diagnostic boundary and next steps.
+- [HANDOFF.md](HANDOFF.md): comprehensive implementation and session handoff.
 - [VS Code support](editors/vscode/README.md): local extension loading and tokenizer tests.
 
 ## Development
@@ -185,3 +212,6 @@ instructions for the web integration and editor tokenizer tests are in
 
 The workflow checks that the gem builds; it does not upload artifacts or publish
 releases. To try Boron today, use the checkout or build the gem locally.
+
+Boron-first testing, project scaffolding, Bundler-aware commands, and a task DSL
+are planned usability work; their scope and open decisions are in ROADMAP.md.

@@ -296,6 +296,33 @@ There is no built-in `&` binding yet: define one before calling it. `def`, `let`
 and `set!` accept `&` as a binding name. `do` retains its existing sequence-form
 meaning; a `do` block marker remains a proposal.
 
+## Explicit Ruby instance context
+
+`with-self` wraps a callable as a Ruby Proc that supplies the host's current Ruby
+self as the first positional argument. The remaining host arguments follow it:
+
+```clojure
+(.instance_exec "Ada" & (with-self (fn [self] (.upcase self)))) ; "ADA"
+
+(defclass Greeter)
+(.define_method Greeter :greet &
+  (with-self (fn [self name] (+ "Hello, " name))))
+(.greet (.new Greeter) "Ada") ; "Hello, Ada"
+```
+
+Use it when the Ruby host rebinds self, such as instance_exec, define_method, or
+Sinatra routes. It preserves lexical Boron captures and the wrapped function's
+strict arity. Reusing a callback supplies the current instance on every call.
+There is no implicit self binding in ordinary fn. The parameter may have any
+name; `self` is a convention. Ordinary callbacks do not automatically receive
+the method receiver: with-self exposes Ruby's block context, which is determined
+by the host. This bridge forwards positional arguments only; keyword/block
+forwarding is not a new language feature.
+
+The optional Sinatra example uses `(fn [self & captures] ...)` because Sinatra
+also passes route captures. It reads `(.params self)` and uses ActiveRecord's
+find_by for `/users/:id`, returning a JSON 404 for invalid or missing IDs.
+
 ## The small builtin library
 
 | Binding | Meaning |
@@ -316,6 +343,7 @@ meaning; a `do` block marker remains a proposal.
 | `require` | Ruby library loading |
 | `send` | Explicit public Ruby dispatch |
 | `send-with-block` | Public dispatch with a distinct Ruby block |
+| `with-self` | Wrap a callable to receive the host Ruby self as its first argument |
 
 These are callable bindings and can be shadowed. For example:
 
@@ -348,7 +376,36 @@ is not mutated. Emitted Ruby uses normal Ruby ARGV.
 the Boron runtime. `compile --emit-ruby` is an equivalent inspection command.
 Programs currently run through `./bin/boron` from the repository.
 
-## Where this language is heading
+## Interactive use
+
+`boron repl` runs a persistent Session. Enter forms across lines; parentheses,
+collection delimiters, strings, and quotation prefixes are checked by the reader.
+Incomplete submissions wait for more input. Completed submissions print their
+last result; whitespace and comment-only input are ignored. Multiple forms in
+one completed submission share normal compilation and phase-ordering rules.
+
+`:help` prints help; `:quit` and `:exit` leave when no submission is in progress.
+EOF exits normally, or reports incomplete buffered input with status 1. Ctrl+C
+clears an unfinished submission or returns from interrupted evaluation. Prompts
+appear only for terminal input; piped input emits results without prompts. Reader,
+compile, and ordinary runtime errors are reported and the loop continues.
+Definitions and macro definitions persist; evaluations are not transactions and
+side effects before an error are not rolled back. SystemExit remains host exit.
+
+The Printer renders forms and collections in readable Lisp notation, with cycle
+and depth guards. Other host objects use inspect. This is display, not a guaranteed
+read/write serialization format. There is no readline history or completion.
+
+## Diagnostics
+
+Reader and compile errors expose structured diagnostics and source spans. CLI and
+REPL excerpts use snapshots; duplicate binding diagnostics label both occurrences.
+Library exception classes and concise messages remain available. Runtime binding
+errors carry their original locations; other Ruby exceptions remain native.
+Runtime source maps, suggestions, error codes, and JSON output are future work.
+See DIAGNOSTICS.md for the exact implemented boundary.
+
+## Quotation and macros
 
 Quotation and macros are implemented. `'x` is shorthand for `(quote x)`;
 backtick constructs a quasiquoted form, `~x` inserts an evaluated value, and
@@ -380,7 +437,7 @@ site; reused structural arguments retain their own source locations.
 
 Later, class bodies and method syntax should extend the small runtime API behind
 `defclass` and `defmodule`. Sequence helpers, threading
-macros, destructuring, and a REPL should make Boron comfortable for everyday work.
+macros and destructuring remain future conveniences; the REPL is implemented.
 Protocols may eventually add abstraction over existing Ruby classes without
 monkey-patching them.
 
@@ -388,3 +445,7 @@ Boron is not aiming for Scheme, Clojure, or Common Lisp compatibility. Proper
 tail calls, continuations, mandatory persistent collections, and a new VM are
 not bootstrap requirements. The useful boundary is explicit: Boron owns syntax
 and lexical meaning; Ruby owns the runtime objects and the ecosystem.
+
+Boron-first testing forms, project scaffolding, bundle-aware commands, and task DSL
+syntax are planned and are not part of the current language/library API. Existing
+examples select optional dependencies through ordinary Gemfiles and Bundler.
