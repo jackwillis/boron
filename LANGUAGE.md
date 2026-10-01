@@ -279,7 +279,7 @@ are future work. There are no Boron try/catch forms yet.
 
 `boron run file.bn` executes a file. `boron compile file.bn` emits Ruby requiring
 the Boron runtime. `compile --emit-ruby` is an equivalent inspection command.
-Programs currently run through `./exe/boron` from the repository.
+Programs currently run through `./bin/boron` from the repository.
 
 ## Where this language is heading
 

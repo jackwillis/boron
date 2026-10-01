@@ -12,20 +12,48 @@ Use Ruby 3.2 or newer (currently verified on Ruby 4.0.7). No external runtime ge
 are required for Boron itself. Required host libraries still need to be installed.
 
 ```sh
-./exe/boron run examples/hello.bn
-./exe/boron run examples/make_adder.bn
-./exe/boron run examples/json.bn
-./exe/boron run examples/blocks.bn
-./exe/boron compile --emit-ruby examples/make_adder.bn
+./bin/boron run examples/hello.bn
+./bin/boron run examples/make_adder.bn
+./bin/boron run examples/json.bn
+./bin/boron run examples/blocks.bn
+./bin/boron compile --emit-ruby examples/make_adder.bn
 ```
 
 `run` executes the program; use `puts` or `print` for output. `compile` writes Ruby
 to stdout without executing the program. Emitted Ruby requires Boron's runtime:
 
 ```sh
-./exe/boron compile examples/make_adder.bn > /tmp/make_adder.rb
+./bin/boron compile examples/make_adder.bn > /tmp/make_adder.rb
 ruby -Ilib /tmp/make_adder.rb
 ```
+
+## Build a gem
+
+```sh
+gem build boron.gemspec
+gem install --local boron-0.1.0.gem
+boron run examples/make_adder.bn
+```
+
+The gem packages the runtime, `bin/boron`, examples, and language documentation.
+Its version is defined in `lib/boron/version.rb`. Development tools and editor
+files are not included, and the gem has no external runtime dependencies.
+License and homepage metadata are still undecided.
+
+## CI and CD
+
+The GitHub Actions workflow in `.github/workflows/ci-cd.yml` runs on pushes,
+pull requests, and manual dispatch. CI installs development/test dependencies,
+runs StandardRB, then runs Minitest on Ruby 3.3, 3.4, and 4.0. Once the entire
+matrix succeeds, CD builds the gem on Ruby 4.0 with `gem build`.
+There is no artifact upload or publishing step; the build remains on the runner.
+
+Workflow setup follows the current [GitHub Actions syntax reference](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
+and [ruby/setup-ruby guidance](https://github.com/ruby/setup-ruby).
+The matrix covers [currently maintained Ruby branches](https://www.ruby-lang.org/en/downloads/branches/),
+including [Debian 13's packaged Ruby 3.3](https://packages.debian.org/trixie/ruby).
+It tests the Ruby versions on Ubuntu runners, not Debian's packages themselves.
+Debian 12's Ruby 3.1 is below Boron's Ruby 3.2 minimum.
 
 ## Language core
 

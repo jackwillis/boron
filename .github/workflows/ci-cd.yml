@@ -1,0 +1,45 @@
+name: CI and CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI — Ruby ${{ matrix.ruby }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.3", "3.4", "4.0"]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Run StandardRB
+        run: bundle exec standardrb
+      - name: Run Minitest
+        run: bundle exec ruby -Itest test/all_test.rb
+
+  cd:
+    name: CD — Build gem
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+      - name: Build gem
+        run: gem build boron.gemspec
+      # The gem stays on the runner. Uploading and publishing are future work.

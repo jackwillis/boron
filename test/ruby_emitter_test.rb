@@ -4,7 +4,8 @@ class RubyEmitterTest < Minitest::Test
   IR = Boron::RubyIR
 
   def execute(node)
-    Kernel.eval(Boron::RubyEmitter.new.emit(node))
+    # Execute generated expressions to verify the emitted Ruby semantics.
+    Kernel.eval(Boron::RubyEmitter.new.emit(node)) # standard:disable Security/Eval
   end
 
   def test_sequence_and_conditionals_are_expressions
@@ -22,7 +23,7 @@ class RubyEmitterTest < Minitest::Test
   end
 
   def test_literal_emission_handles_escaping_and_unicode
-    values = ["quotes: \"\\\n", '#{raise "oops"}', "λ", :"odd symbol", nil, false]
+    values = ["quotes: \"\\\n", "\#{raise \"oops\"}", "λ", :"odd symbol", nil, false]
     values.each do |value|
       actual = execute(IR::Literal.new(value))
       value.nil? ? assert_nil(actual) : assert_equal(value, actual)

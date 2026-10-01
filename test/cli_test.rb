@@ -5,7 +5,7 @@ require "rbconfig"
 
 class CLITest < Minitest::Test
   ROOT = File.expand_path("..", __dir__)
-  EXE = File.join(ROOT, "exe", "boron")
+  EXE = File.join(ROOT, "bin", "boron")
 
   def cli(*arguments)
     Open3.capture3(RbConfig.ruby, EXE, *arguments)
