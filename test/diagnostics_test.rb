@@ -56,4 +56,17 @@ class DiagnosticsTest < Minitest::Test
     end
     assert_raises(ZeroDivisionError) { Boron::Session.new.evaluate("(/ 1 0)") }
   end
+
+  def test_diagnostic_labels_are_immutable_and_expansion_has_its_own_phase
+    span = Boron::SourceSpan.new("label.bn", 0, 1, 1, 1, 1, 2)
+    message = +"first binding"
+    label = Boron::Label.new(span, message)
+    message.replace("changed")
+    assert_equal "first binding", label.message
+    assert label.message.frozen?
+    error = assert_raises(Boron::CompileError) do
+      Boron::Compiler.new.compile("(defmacro broken [] (/ 1 0)) (broken)")
+    end
+    assert_equal :expansion, error.diagnostic.kind
+  end
 end

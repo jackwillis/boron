@@ -60,6 +60,7 @@ class SqliteWebTest < Minitest::Test
     assert_equal({"error" => "user not found"}, JSON.parse(missing.body))
     invalid = @request.get("/users/not-a-number", "HTTP_HOST" => "localhost")
     assert_equal 404, invalid.status
+    assert_equal 404, @request.get("/users/#{user.id}junk", "HTTP_HOST" => "localhost").status
     assert_equal 2, BoronDemo::User.count
   end
 
@@ -72,10 +73,15 @@ class SqliteWebTest < Minitest::Test
       require "rack/mock"
       response = Rack::MockRequest.new(BoronDemo::App).get("/users", "HTTP_HOST" => "localhost")
       abort response.body unless response.status == 200
-      puts response.body
+      users = JSON.parse(response.body)
+      individual = Rack::MockRequest.new(BoronDemo::App).get("/users/" + users.first.fetch("id").to_s, "HTTP_HOST" => "localhost")
+      abort individual.body unless individual.status == 200
+      puts JSON.generate("users" => users, "individual" => JSON.parse(individual.body))
     RUBY
     output, error, status = Open3.capture3(RbConfig.ruby, "-e", script)
     assert status.success?, error
-    assert_equal ["Ada", "Grace"], JSON.parse(output).map { |user| user.fetch("name") }
+    value = JSON.parse(output)
+    assert_equal ["Ada", "Grace"], value.fetch("users").map { |user| user.fetch("name") }
+    assert_equal "Ada", value.fetch("individual").fetch("name")
   end
 end

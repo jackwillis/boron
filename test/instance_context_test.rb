@@ -32,5 +32,9 @@ class InstanceContextTest < Minitest::Test
     ruby = Boron::Compiler.new.compile(source, standalone: true)
     assert_equal "ADA", Kernel.eval(ruby) # standard:disable Security/Eval
     assert_raises(TypeError) { evaluate("(with-self 1)") }
+    assert_equal ["first", "second"], evaluate(<<~BN)
+      (let [callback (with-self (fn [self] self))]
+        [(.instance_exec "first" & callback) (.instance_exec "second" & callback)])
+    BN
   end
 end

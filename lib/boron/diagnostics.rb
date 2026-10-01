@@ -1,5 +1,9 @@
 module Boron
-  Label = Data.define(:span, :message)
+  Label = Data.define(:span, :message) do
+    def initialize(span:, message:)
+      super(span: span, message: message.dup.freeze)
+    end
+  end
 
   Diagnostic = Data.define(:kind, :message, :primary_span, :labels, :notes, :help, :cause) do
     def initialize(kind:, message:, primary_span:, labels: [], notes: [], help: nil, cause: nil)

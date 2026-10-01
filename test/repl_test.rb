@@ -1,6 +1,7 @@
 require_relative "test_helper"
 require "boron/cli"
 require "stringio"
+require "open3"
 
 class REPLTest < Minitest::Test
   def run_repl(source)
@@ -44,5 +45,32 @@ class REPLTest < Minitest::Test
     output, error, = run_repl(")\n42\n")
     assert_includes error, "unexpected ')'"
     assert_equal "42\n", output
+  end
+
+  def test_actual_cli_has_no_prompts_when_piped_and_handles_cyclic_values
+    input = "(def x 3)\n(+ x 4)\n(def cycle [])\n(.push cycle cycle)\n"
+    output, error, status = Open3.capture3(RbConfig.ruby, File.expand_path("../bin/boron", __dir__), "repl", stdin_data: input)
+    assert status.success?, error
+    assert_empty error
+    assert_equal "3\n7\n[]\n[#<cycle>]\n", output
+  end
+
+  def test_interactive_prompts_and_interrupt_clear_partial_input
+    input = StringIO.new("(\n42\n:quit\n")
+    def input.tty?
+      true
+    end
+
+    def input.gets
+      @calls = (@calls || 0) + 1
+      raise Interrupt if @calls == 2
+      super
+    end
+    out = StringIO.new
+    err = StringIO.new
+    assert_equal 0, Boron::CLI.run(["repl"], input: input, out: out, err: err)
+    assert_includes out.string, "...> "
+    assert_includes out.string, "42\n"
+    assert_equal "^C\n", err.string
   end
 end
