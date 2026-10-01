@@ -4,10 +4,15 @@ module Boron
       Usage:
         boron run FILE.bn [-- PROGRAM_ARGS...]
         boron compile [--emit-ruby] FILE.bn
+        boron repl
         boron --help
     TEXT
 
-    def self.run(arguments, out: $stdout, err: $stderr)
+    def self.run(arguments, input: $stdin, out: $stdout, err: $stderr)
+      if arguments == ["repl"]
+        require_relative "repl"
+        return REPL.new(input: input, out: out, err: err).run
+      end
       args = arguments.dup
       if args == ["--help"] || args == ["-h"]
         out.print USAGE

@@ -54,4 +54,6 @@ module Boron
       super(message, span: span, kind: :reader, **options)
     end
   end
+
+  class IncompleteInput < ReadError; end
 end

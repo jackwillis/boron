@@ -56,7 +56,7 @@ module Boron
         end
         prefix_span = span_from(start)
         skip_trivia
-        error("missing form after #{name}", start) if eof?
+        error("missing form after #{name}", start, incomplete: true) if eof?
         argument = read_form
         head = Syntax.new(Form::Identifier.new(name), prefix_span)
         Syntax.new(Form::List.new([head, argument]), span_from(start))
@@ -71,7 +71,7 @@ module Boron
       items = []
       loop do
         skip_trivia
-        raise ReadError.new("unclosed #{label}", span: opening_span) if eof?
+        raise IncompleteInput.new("unclosed #{label}", span: opening_span) if eof?
         if current == closer
           advance
           error("map requires an even number of forms", start) if type == Form::Map && items.length.odd?
@@ -89,7 +89,7 @@ module Boron
         advance
         return Syntax.new(value.freeze, span_from(start)) if character == '"'
         if character == "\\"
-          error("unclosed string", start) if eof?
+          error("unclosed string", start, incomplete: true) if eof?
           escaped = current
           advance
           error("unknown escape: \\#{escaped}", start) unless ESCAPES.key?(escaped)
@@ -98,7 +98,7 @@ module Boron
           value << character
         end
       end
-      error("unclosed string", start)
+      error("unclosed string", start, incomplete: true)
     end
 
     def read_atom(start)
@@ -176,8 +176,9 @@ module Boron
       )
     end
 
-    def error(message, start)
-      raise ReadError.new(message, span: span_from(start))
+    def error(message, start, incomplete: false)
+      type = incomplete ? IncompleteInput : ReadError
+      raise type.new(message, span: span_from(start))
     end
   end
 end
